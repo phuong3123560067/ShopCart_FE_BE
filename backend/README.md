@@ -3,6 +3,7 @@
 - Sử dụng IntelliJ IDEA cho BE
 - Java: 21
 - Không cần tải spring boot vì pom.xml đã có đủ
+- DB: PostgreSQL
 
 ## Quy tắc đặt tên nhánh (Naming Convention)
 - Tên nhánh nên phản ánh đúng chức năng hoặc câu hỏi mà các bạn đang làm.
@@ -101,7 +102,7 @@ mvn jacoco:report (Kiểm tra xem đã đạt 85% coverage chưa)
 - @NoArgsConstructor: Tạo constructor không tham số (Bắt buộc cho Hibernate). 
 - @AllArgsConstructor: Tạo constructor đầy đủ tham số (Cực tiện khi viết Unit Test ở Câu 2).
 - **6. Danh sách các API cần thiết để khớp với FE (Flow)**
-1. Nhóm Xác thực (Auth API) – Phục vụ Câu 6.2 (Security)
+1. Nhóm Xác thực (Auth API) – Phục vụ Câu 6.2 (Security) (Role: Admin, Customer)
 
 | Method | API Endpoint | Chức năng |
 | :--- | :--- | :--- |
@@ -111,9 +112,13 @@ mvn jacoco:report (Kiểm tra xem đã đạt 85% coverage chưa)
 
 | Method | API Endpoint | Chức năng |
 | :--- | :--- | :--- |
-| **GET** | `/api/products` | Lấy danh sách sản phẩm |
-| **GET** | `/api/products/{id}` | Xem chi tiết sản phẩm |
-3. Nhóm Giỏ hàng (Cart API) – Phục vụ Câu 2.1 & 3.1
+| **GET** | `/api/products` | Lấy danh sách sản phẩm(Customer) |
+| **GET** | `/api/products/{id}` | Xem chi tiết sản phẩm(Customer) |
+| **PUT** | `/api/products/{id}` | Cập nhật thông tin(Admin): Thay đổi status thành Inactive để test case: "Không thể thêm sản phẩm ngừng kinh doanh vào giỏ" |
+
+- Lưu ý: Các API từ mục 2, 3, 4 bắt buộc phải đi kèm Token sau khi đăng nhập để chấm điểm Security Testing (Câu 6.2)
+3. Nhóm Giỏ hàng (Cart API) & Khuyến mãi – Phục vụ Câu 2.1 & 3.1
+- 3.1. Nhóm Giỏ hàng (Cart API)
 
 | Method | API Endpoint | Chức năng |
 | :--- | :--- | :--- |
@@ -121,22 +126,25 @@ mvn jacoco:report (Kiểm tra xem đã đạt 85% coverage chưa)
 | **GET** | `/api/cart` | Xem nội dung giỏ hàng |
 | **PUT** | `/api/cart/update` | Cập nhật số lượng sản phẩm |
 | **DELETE** | `/api/cart/remove/{id}` | Xóa sản phẩm khỏi giỏ |
+| **POST** | `/api/cart/apply-coupon` | Customer gọi để sử dụng mã :Áp dụng mã giảm giá vào giỏ( Kiểm tra expiry_date, usage_limit. Trả về discount_amount để hiển thị tạm tính.)|
+| **DELETE** | `/api/cart/coupon` | Hủy áp dụng mã |
+- 3.2. Khuyến mãi
 
-- Lưu ý: Các API từ mục 3 và 4 bắt buộc phải đi kèm Token sau khi đăng nhập để chấm điểm Security Testing (Câu 6.2)
+| Method | API Endpoint | Chức năng |
+| :--- | :--- | :--- |
+| **POST** | `/api/coupons` | Tạo mã giảm giá mới(Dành cho quyền Admin để tạo "hiện trường" giả (mã hết lượt dùng, mã hợp lệ, mã không hợp lệ)) |
 4. Nhóm Đơn hàng & Mua hàng (Order API) – Phục vụ Câu 2.2 & 3.2
 
 | Method | API Endpoint | Chức năng |
 | :--- | :--- | :--- |
-| **POST** | `/api/orders` | Tạo đơn hàng (Trừ tồn kho)  |
-| **GET** | `/api/orders` | Xem lịch sử đơn hàng |
+| **POST** | `/api/orders` | Tạo đơn hàng (Trừ tồn kho) |
 | **GET** | `/api/orders/{id}` | Xem chi tiết 1 đơn hàng |
-| **POST** | `/api/orders/{id}/cancel` | Hủy đơn hàng (Hoàn tồn kho) |
 5. Nhóm Kho hàng (Inventory API) – Phục vụ Câu 3.2.b
 
 | Method | API Endpoint | Chức năng |
 | :--- | :--- | :--- |
 | **GET** | `/api/inventory/{productId}` | Kiểm tra số lượng tồn kho còn lại   |
-
+|**PUT** | `/api/inventory/{productId}` | Cập nhật số lượng kho(Tạo điều kiện: Chỉnh kho về 0 để test case: "khi hết hàng" )  |
 - **6.1. Luồng dữ liệu chuẩn (Flow)**
 - Lưu ý kỹ thứ tự nhận dữ liệu này để không viết sai file:
 - Request: Postman gửi JSON {"productId": 1, "quantity": 2}.

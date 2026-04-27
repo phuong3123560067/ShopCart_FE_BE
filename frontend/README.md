@@ -2,6 +2,7 @@
 ---
 - Áp dụng quy tắc TDD (viết test trước, viết code sau)
 - FE làm việc trên Vs code
+- DB: PostgreSQL
 ## Quy tắc đặt tên nhánh (Naming Convention)
 - Tên nhánh nên phản ánh đúng chức năng hoặc câu hỏi mà các bạn đang làm.
 - main: Nhánh chính, chỉ chứa code đã chạy ổn định và hoàn thiện.
