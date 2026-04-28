@@ -8,7 +8,8 @@ export default mergeConfig(
       globals: true,
       environment: 'jsdom',
       setupFiles: ['./src/tests/setup.ts'], 
-      include: ['src/**/*.{test,spec}.{ts,tsx}'], 
+      // SỬA TẠI ĐÂY: Thêm .js và .jsx để máy nhận diện được các file test bạn đã viết
+      include: ['src/**/*.{test,spec}.{js,jsx,ts,tsx}'], 
       coverage: {
         provider: 'v8',
         reporter: ['text', 'json', 'html'], 
@@ -24,6 +25,8 @@ export default mergeConfig(
           'src/vite-env.d.ts',
           '**/*.test.tsx',
           '**/*.test.ts',
+          '**/*.test.jsx',
+          '**/*.test.js',
         ],
       },
     },

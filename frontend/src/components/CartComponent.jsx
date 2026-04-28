@@ -47,7 +47,7 @@ function CartComponent({ userId }) {
         // 1. Kiểm tra kho trước
         const stockResponse = await inventoryService.checkStock(cart.items);
         
-        if (stockResponse.available) {
+        if (stockResponse.available) { //trả về true nếu còn hàng
             // 2. Nếu còn hàng mới tạo đơn
             const orderResponse = await orderService.createOrder({
                 userId,
