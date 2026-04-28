@@ -1,4 +1,5 @@
-export function calculateOrderPrice(cartItems, coupon = null, shippingFee = 0) { //hàm tính toán giá trị đơn hàng dựa trên các sản phẩm trong giỏ hàng, coupon và phí vận chuyển
+//hàm tính toán giá trị đơn hàng dựa trên các sản phẩm trong giỏ hàng, coupon và phí vận chuyển
+export function calculateOrderPrice(cartItems, coupon = null, shippingFee = 0) {
     if (!Array.isArray(cartItems)) {
         throw new Error("Invalid cart");
     }
@@ -31,7 +32,8 @@ export function calculateOrderPrice(cartItems, coupon = null, shippingFee = 0) {
     };
 }
 
-export function checkInventoryAvailability(cartItems) { //hàm kiểm tra xem số lượng sản phẩm trong giỏ hàng có vượt quá số lượng tồn kho hay không
+//hàm kiểm tra xem số lượng sản phẩm trong giỏ hàng có vượt quá số lượng tồn kho hay không
+export function checkInventoryAvailability(cartItems) {
     for (const item of cartItems) {
         if (item.quantity > item.stock) {
             return false;
