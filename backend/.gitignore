@@ -1,33 +1,34 @@
-HELP.md
+### Java & Maven ###
 target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
 .mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
+out/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+### Logs & OS ###
+*.log
+.DS_Store
+Thumbs.db
 
-### VS Code ###
-.vscode/
+### Help files ###
+HELP.md
+### Secrets & Config ###
+# Chặn file cấu hình thật chứa mật khẩu
+src/main/resources/application.properties
+
+# KHÔNG chặn file example
+!src/main/resources/application.properties.example
+
+# Chặn các file cấu hình tạm hoặc file log phát sinh
+src/main/resources/*.log

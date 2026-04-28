@@ -22,3 +22,20 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Environment files 
+.env
+.env.production
+.env.development
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Test coverage 
+coverage/
+
+# Playwright/E2E
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/

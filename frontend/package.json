@@ -1,17 +1,22 @@
 {
-  "name": "frontend",
+  "name": "frontend-shopcart",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
+  "dev": "vite",
+  "build": "tsc && vite build",
+  "lint": "eslint .",
+  "preview": "vite preview",
+  "test": "vitest --config vitest.config.ts",
+  "coverage": "vitest run --coverage --config vitest.config.ts",
+  "test:e2e": "playwright test",
+  "test:e2e:ui": "playwright test --ui"
+},
   "dependencies": {
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "axios": "^1.7.9",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
