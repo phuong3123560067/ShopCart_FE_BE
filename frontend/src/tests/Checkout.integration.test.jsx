@@ -10,7 +10,7 @@ describe('Checkout Integration Tests', () => {
         ]
     };
 
-    // a) Test CheckoutSummary component (0.25 điểm)
+    // a) Test CheckoutSummary component
     test('TC1: Hiển thị đầy đủ danh sách sản phẩm trong tóm tắt giỏ hàng', async () => {
         render(<CheckoutPage cart={mockCart} />);
         
@@ -34,14 +34,14 @@ describe('Checkout Integration Tests', () => {
         });
     });
 
-    // c) Test InventoryWarning component (Mở rộng)
+    // c) Test InventoryWarning component
     test('TC3: Hiển thị cảnh báo khi số lượng vượt quá tồn kho', async () => {
         render(<CheckoutPage cart={mockCart} />);
         
         // Tìm component cảnh báo dựa trên ID đã đặt trong code
         const warning = screen.queryByTestId('inventory-warning');
         
-        // Nếu trong code bạn thiết lập Laptop Dell > 1 là hết hàng thì nó phải xuất hiện
+        // Nếu trong code Laptop Dell có tồn kho chỉ 1 cái nhưng trong cart có 2 cái thì sẽ hiển thị cảnh báo
         expect(warning).toBeInTheDocument();
         expect(warning).toHaveTextContent(/Cảnh báo/i);
     });
