@@ -117,7 +117,7 @@ function CartComponent({ userId }) {
                         </div>
                         <button 
                             data-testid="checkout-btn" 
-                            onClick={() => cartService.checkout(userId)}
+                            onClick={() => handleCheckout()}
                             style={{ 
                                 width: '100%',
                                 padding: '12px', 

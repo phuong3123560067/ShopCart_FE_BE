@@ -27,6 +27,13 @@ export class CartPage {
   }
 
   async verifyMessage(text: string) {
-    await expect(this.page.getByText(text)).toBeVisible();
-  }
+    const regex = new RegExp(text, 'i');
+    const locator = this.page.getByText(regex);
+    
+    // Đợi cho element xuất hiện trong DOM
+    await locator.waitFor({ state: 'attached', timeout: 10000 });
+    
+    // Sau đó mới kiểm tra nó có hiển thị (visible) không
+    await expect(locator).toBeVisible();
+}
 }

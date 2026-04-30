@@ -37,7 +37,7 @@ export const addToCart = async (userId, product) => {
     // 3. Trả về đúng format mà bài Test yêu cầu
     return {
         success: true,
-        message: 'Them vao gio hang thanh cong',
+        message: 'Thêm vào giỏ hàng thành công',
         cartTotal: mockCart.total
     };
 };
