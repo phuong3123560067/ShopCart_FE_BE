@@ -35,5 +35,5 @@ export class CartPage {
     
     // Sau đó mới kiểm tra nó có hiển thị (visible) không
     await expect(locator).toBeVisible();
-}
+  }
 }

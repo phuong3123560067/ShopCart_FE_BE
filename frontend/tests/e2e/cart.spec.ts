@@ -13,8 +13,7 @@ test.describe('Cart E2E Tests', () => {
         const addBtn = page.getByTestId('add-to-cart-btn');
         await addBtn.click();
 
-        // 2. Kiểm tra message thành công (Khớp với code React bạn đã sửa)
-        // Dùng regex /cong/i để an toàn cho cả có dấu và không dấu
+        // 2. Kiểm tra message thành công
         await expect(page.getByText(/thành công/i)).toBeVisible();
 
         // 3. Kiểm tra UI giỏ hàng cập nhật (ví dụ: Tên sản phẩm xuất hiện)
@@ -26,19 +25,33 @@ test.describe('Cart E2E Tests', () => {
     });
 
     // b) Test validation messages khi vượt tồn kho (0.25 điểm)
-    test('Hiển thị thông báo lỗi khi sản phẩm trong kho đã hết', async ({ page }) => {
-        // Giả lập tình huống: Thêm sản phẩm vào giỏ trước
+    // Trường hợp 1: Mua 1 cái -> Thành công
+    test('Nên thanh toán thành công khi mua số lượng ít', async ({ page }) => {
         await page.getByTestId('add-to-cart-btn').click();
         
-        /* 
-           Kịch bản: Nhấn Thanh toán ngay. 
-           Nếu inventoryService.checkStock trả về false (hết hàng),
-           React sẽ setMessage("Rất tiếc, sản phẩm trong kho đã hết!")
-        */
-        const checkoutBtn = page.getByTestId('checkout-btn');
-        await checkoutBtn.click();
+        // Nhấn thanh toán (mặc định số lượng là 1)
+        await page.getByTestId('checkout-btn').click();
 
-        // Kiểm tra thông báo lỗi từ hàm handleCheckout
+        // Kiểm tra thông báo thành công
+        await expect(page.getByText(/Đặt hàng thành công/i)).toBeVisible();
+    });
+
+    // Trường hợp 2: Mua 11 cái -> Báo lỗi (Thỏa mãn yêu cầu 6.1.2b)
+    test('Nên hiện thông báo lỗi khi mua quá số lượng tồn kho', async ({ page }) => {
+        // 1. Thêm sản phẩm vào giỏ trước
+        await page.getByTestId('add-to-cart-btn').click();
+
+        // 2. Nhấn nút tăng số lượng (+) cho đến khi đạt 11
+        const increaseBtn = page.getByTestId('increase-btn-P999'); 
+        
+        for (let i = 0; i < 10; i++) {
+            await increaseBtn.click();
+        }
+
+        // 3. Nhấn thanh toán
+        await page.getByTestId('checkout-btn').click();
+
+        // 4. Kiểm tra thông báo lỗi
         await expect(page.getByText(/Rất tiếc, sản phẩm trong kho đã hết/i)).toBeVisible();
     });
 

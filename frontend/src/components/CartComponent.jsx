@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import * as cartService from "../services/cartService";
 import * as inventoryService from "../services/inventoryService";
 import * as orderService from "../services/orderService";
+import { useNavigate } from "react-router-dom";//chuyển hướng sau khi đặt hàng thành công
 
 function CartComponent({ userId }) {
     const [cart, setCart] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState(""); 
+    const navigate = useNavigate(); // Hook để chuyển hướng sau khi đặt hàng thành công
 
     const fetchCartData = async () => {
         try {
@@ -59,7 +61,15 @@ function CartComponent({ userId }) {
             setMessage("Rất tiếc, sản phẩm trong kho đã hết!");
         }
         setLoading(false);
+
+        // Chuyển hướng sang /checkout và mang theo dữ liệu giỏ hàng
+        navigate("/checkout", { state: { cartData: cart } });
     };
+
+    // Thêm dấu ?. và kiểm tra nếu chưa có cart thì mặc định là 0
+    const finalTotal = cart?.items 
+        ? cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0) 
+        : 0;
 
     if (error) return <div style={{ color: 'red', padding: '20px' }}>{error}</div>;
     if (loading) return <div style={{ padding: '20px' }}>Đang tải giỏ hàng...</div>;
@@ -113,7 +123,7 @@ function CartComponent({ userId }) {
 
                     <div style={{ marginTop: '20px', textAlign: 'right' }}>
                         <div data-testid="total-price" style={{ fontSize: '1.3em', marginBottom: '15px' }}>
-                            Tổng cộng: <span style={{ color: '#d9534f', fontWeight: 'bold' }}>{cart.total} USD</span>
+                            Tổng cộng: <span style={{ color: '#d9534f', fontWeight: 'bold' }}>{finalTotal.toLocaleString('vi-VN')} VNĐ</span>
                         </div>
                         <button 
                             data-testid="checkout-btn" 

@@ -1,9 +1,12 @@
 // Dữ liệu mẫu nằm ngoài hàm để không bị reset
 let mockCart = {
     items: [
-        { productId: 'P001', productName: 'Laptop', quantity: 1 , price: 100000}
+        { productId: 'P001', productName: 'Laptop', quantity: 1 , price: 20000000}
     ],
-    total: 1000
+    total: 20000000
+    
+    // items: [],
+    // total: 0
 };
 
 
@@ -23,7 +26,8 @@ export const addToCart = async (userId, product) => {
         // Nếu chưa có thì thêm object sản phẩm mới vào mảng items
         mockCart.items.push({
             productId: product.productId,
-            productName: product.productName || "Sản phẩm mới",
+            productName: product.productName,
+            price: product.price,
             quantity: 1
         });
     }
