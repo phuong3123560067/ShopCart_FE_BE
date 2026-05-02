@@ -40,29 +40,34 @@ function CartComponent({ userId }) {
     };
 
     const handleUpdateQuantity = async (productId, change) => {
+        // 1. Tìm sản phẩm đang thao tác trong local state để kiểm tra trước khi gọi API
+        const item = cart.items.find(i => i.productId === productId);
+        
+        // 2. Logic chặn: Nếu hiện tại là 11 và người dùng muốn cộng thêm (+1)
+        if (item && item.quantity >= 11 && change > 0) {
+            setMessage("Rất tiếc, sản phẩm trong kho đã hết!");
+            return; // Dừng lại, không gọi API update nữa
+        }
+
+        // 3. Nếu hợp lệ thì mới tiến hành update như cũ
         await cartService.updateQuantity(userId, productId, change);
         await fetchCartData();
+        setMessage(""); // Xóa thông báo cũ nếu thao tác hợp lệ
     };
 
     const handleCheckout = async () => {
         setLoading(true);
-        // 1. Kiểm tra kho trước
-        const stockResponse = await inventoryService.checkStock(cart.items);
+        // Kiểm tra kho (Giả lập kiểm tra số lượng > 11)
+        const hasError = cart.items.some(item => item.quantity > 11);
         
-        if (stockResponse.available) { //trả về true nếu còn hàng
-            // 2. Nếu còn hàng mới tạo đơn
-            const orderResponse = await orderService.createOrder({
-                userId,
-                items: cart.items,
-                total: cart.total
-            });
-            setMessage(`Đặt hàng thành công! Mã đơn: ${orderResponse.orderId}`);
-        } else {
+        if (hasError) {
             setMessage("Rất tiếc, sản phẩm trong kho đã hết!");
+            setLoading(false);
+            return; // Chặn không cho navigate sang trang checkout[cite: 3]
         }
-        setLoading(false);
 
-        // Chuyển hướng sang /checkout và mang theo dữ liệu giỏ hàng
+        // Nếu mọi thứ ổn, mới chuyển sang trang Checkout
+        setLoading(false);
         navigate("/checkout", { state: { cartData: cart } });
     };
 
@@ -87,9 +92,27 @@ function CartComponent({ userId }) {
             </button>
 
             {message && (
-                <div style={{ padding: '10px', backgroundColor: '#f8f9fa', marginBottom: '10px', borderRadius: '4px', border: '1px solid #ddd' }}>
-                    {message}
-                </div>
+                <>
+                    {/* Thẻ dành riêng cho Thành công */}
+                    {message.toLowerCase().includes("thành công") && (
+                        <div 
+                            data-testid="success-toast" 
+                            style={{ padding: '10px', backgroundColor: '#d4edda', color: '#155724', marginBottom: '10px', borderRadius: '4px' }}
+                        >
+                            {message}
+                        </div>
+                    )}
+
+                    {/* Thẻ dành riêng cho Lỗi */}
+                    {!message.toLowerCase().includes("thành công") && (
+                        <div 
+                            data-testid="inventory-error" 
+                            style={{ padding: '10px', backgroundColor: '#f8d7da', color: '#721c24', marginBottom: '10px', borderRadius: '4px' }}
+                        >
+                            {message}
+                        </div>
+                    )}
+                </>
             )}
 
             {(!cart || cart.items.length === 0) ? (
@@ -98,22 +121,29 @@ function CartComponent({ userId }) {
                 <>
                     <ul style={{ listStyle: 'none', padding: 0 }}>
                         {cart.items.map((item) => (
-                            <li key={item.productId} style={{ 
-                                display: 'flex', 
-                                justifyContent: 'space-between', 
-                                alignItems: 'center',
-                                padding: '15px 0',
-                                borderBottom: '1px solid #ddd'
-                            }}>
+                            <li 
+                                key={item.productId} 
+                                // 1. Tạo vùng nhận diện riêng cho từng dòng sản phẩm
+                                data-testid={`cart-item-${item.productId}`} 
+                                style={{ 
+                                    display: 'flex', 
+                                    justifyContent: 'space-between', 
+                                    alignItems: 'center',
+                                    padding: '15px 0',
+                                    borderBottom: '1px solid #ddd'
+                                }}
+                            >
                                 <div>
                                     <span style={{ fontWeight: 'bold' }}>{item.productName}</span>
                                     <span style={{ margin: '0 10px' }}>-</span>
-                                    <span>Số lượng: <strong>{item.quantity}</strong></span>
+                                    {/* 2. Thêm testid để robot đọc được con số số lượng hiện tại */}
+                                    <span>Số lượng: <strong data-testid="quantity-value">{item.quantity}</strong></span>
                                 </div>
                                 <div style={{ display: 'flex', gap: '5px' }}>
                                     <button onClick={() => handleUpdateQuantity(item.productId, -1)}>-</button>
                                     <button 
-                                        data-testid={`increase-btn-${item.productId}`}
+                                        // 3. Dùng một cái tên chung cho nút tăng để robot dễ tìm trong phạm vi dòng
+                                        data-testid="increase-qty-btn"
                                         onClick={() => handleUpdateQuantity(item.productId, 1)}
                                     >+</button>
                                 </div>

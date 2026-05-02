@@ -34,7 +34,8 @@ export const addToCart = async (userId, product) => {
 
     // 2. Tính toán lại tổng tiền
     const itemPrice = product.price
-    mockCart.total = mockCart.items.reduce((sum, item) => sum + (item.quantity * itemPrice), 0);
+    // Cách tính chuẩn: lấy giá của từng item nhân cho số lượng của chính nó
+    mockCart.total = mockCart.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
 
     console.log("Giỏ hàng sau khi thêm:", mockCart);
 

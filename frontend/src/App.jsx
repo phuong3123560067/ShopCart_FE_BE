@@ -10,8 +10,7 @@ function App() {
 
     return (
       <div style={{ textAlign: 'center', padding: '40px', border: '2px solid #28a745', borderRadius: '10px' }}>
-        <h2 style={{ color: 'green' }}>✔️ ĐẶT HÀNG THÀNH CÔNG!</h2>
-        <p>Cảm ơn bạn đã tin tưởng ShopCart.</p>
+        <h2 style={{ color: 'green' }}> ĐẶT HÀNG THÀNH CÔNG!</h2>
         
         {/* Hiện mã cho người dùng thấy */}
         <div style={{ backgroundColor: '#f4f4f4', padding: '10px', display: 'inline-block', borderRadius: '5px' }}>

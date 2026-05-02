@@ -1,15 +1,36 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import * as orderService from "../services/orderService"; 
 import { CheckoutSummary } from "./CheckoutSummary";
 import { PriceCalculator } from "./PriceCalculator";
 import { InventoryWarning } from "./InventoryWarning";
 
 const CheckoutPage = () => {
+  const [discountCode, setDiscountCode] = useState(""); // Mã giảm giá nhập bởi người dùng
+  const [discountValue, setDiscountValue] = useState(0); // Giá trị giảm giá được tính toán sau khi áp dụng mã
+  const shippingFee = 30000; // Phí ship cố định
+
   const location = useLocation();
   const navigate = useNavigate();
   
   // Lấy dữ liệu giỏ hàng từ state của Router
   const cart = location.state?.cartData;
+
+  // Tính tạm tính (Subtotal)
+  const subTotal = cart?.items.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0;
+
+  // Hàm áp dụng mã giảm giá giả lập
+  const applyDiscount = () => {
+    if (discountCode === "GIAM10") {
+      setDiscountValue(subTotal * 0.1);
+      alert("Đã áp dụng mã giảm giá 10%!");
+    } else {
+      alert("Mã giảm giá không hợp lệ!");
+      setDiscountValue(0);
+    }
+  };
+
+  const finalTotal = subTotal + shippingFee - discountValue;
 
   if (!cart) return <div style={{ padding: '20px', textAlign: 'center' }}>Không có dữ liệu thanh toán. Vui lòng quay lại giỏ hàng.</div>;
 
@@ -51,21 +72,43 @@ const CheckoutPage = () => {
         <CheckoutSummary items={cart.items} /> 
       </div>
 
-      {/* Khu vực cảnh báo tồn kho */}
-      <InventoryWarning items={cart.items} />
+      {/* Khu vực cảnh báo tồn kho không cần thiết vì đã có logic chặn ở CartComponent
+      <InventoryWarning items={cart.items} /> */} 
 
-      {/* Khu vực tính tổng tiền */}
+      {/* Khu vực nhập mã giảm giá */}
+      <div style={{ marginBottom: '15px', display: 'flex', gap: '10px' }}>
+        <input 
+          type="text" 
+          placeholder="Nhập mã (GIAM10)" 
+          value={discountCode}
+          onChange={(e) => setDiscountCode(e.target.value)}
+          style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+        />
+        <button onClick={applyDiscount} style={{ padding: '8px 15px', cursor: 'pointer' }}>Áp dụng</button>
+      </div>
+
       <div className="total-section" style={{
         marginTop: '20px',
         padding: '15px',
         borderTop: '1px dashed #ccc',
-        textAlign: 'right',
-        fontSize: '1.2em'
+        textAlign: 'right'
       }}>
-        <span style={{ fontWeight: 'normal' }}>Tổng thanh toán: </span>
-        <strong style={{ color: '#d9534f' }}>
-          <PriceCalculator items={cart.items} />
-        </strong>
+        <div style={{ marginBottom: '5px' }}>
+          Tạm tính: <span data-testid="subtotal-price">{subTotal.toLocaleString()}đ</span>
+        </div>
+        <div style={{ marginBottom: '5px' }}>
+          Phí ship: <span data-testid="shipping-fee">+{shippingFee.toLocaleString()}đ</span>
+        </div>
+        <div style={{ marginBottom: '5px', color: 'red' }}>
+          Giảm giá: <span data-testid="discount-amount">-{discountValue.toLocaleString()}đ</span>
+        </div>
+        
+        <div style={{ fontSize: '1.4em', marginTop: '10px' }}>
+          <strong>Tổng thanh toán: </strong>
+          <strong data-testid="final-total" style={{ color: '#d9534f' }}>
+            {finalTotal.toLocaleString()}đ
+          </strong>
+        </div>
       </div>
       
       <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
