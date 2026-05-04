@@ -1,14 +1,7 @@
-// Dữ liệu mẫu nằm ngoài hàm để không bị reset
-let mockCart = {
-    items: [
-        { productId: 'P001', productName: 'Laptop', quantity: 1 , price: 20000000}
-    ],
-    total: 20000000
-    
-    // items: [],
-    // total: 0
-};
+import { VALID_CART, EMPTY_CART } from "../tests/mockData/cart.mock";
 
+let mockCart = { ... VALID_CART};
+// let mockCart = { ... EMPTY_CART};
 
 export const getCart = async (userId) => {
     // Trả về một bản sao mới nhất của giỏ hàng
@@ -16,14 +9,29 @@ export const getCart = async (userId) => {
 };
 
 export const addToCart = async (userId, product) => {
+    // --- BƯỚC QUAN TRỌNG NHẤT: Kiểm tra tồn kho trước khi xử lý ---
+    if (!product || product.stock <= 0) {
+        return {
+            success: false,
+            message: 'Sản phẩm đã hết hàng', // Không chứa chữ "thành công" -> Hiện thẻ đỏ
+            cartTotal: mockCart.total
+        };
+    }
+
     // 1. Kiểm tra sản phẩm đã tồn tại trong giỏ hàng chưa
     const existingItem = mockCart.items.find(item => item.productId === product.productId);
 
     if (existingItem) {
-        // Nếu có rồi thì tăng số lượng
+        // Kiểm tra xem nếu tăng thêm 1 có vượt quá tồn kho không (Nâng cao)
+        if (existingItem.quantity + 1 > product.stock) {
+            return {
+                success: false,
+                message: 'Số lượng yêu cầu vượt quá tồn kho hiện có',
+                cartTotal: mockCart.total
+            };
+        }
         existingItem.quantity += 1;
     } else {
-        // Nếu chưa có thì thêm object sản phẩm mới vào mảng items
         mockCart.items.push({
             productId: product.productId,
             productName: product.productName,
@@ -33,35 +41,38 @@ export const addToCart = async (userId, product) => {
     }
 
     // 2. Tính toán lại tổng tiền
-    const itemPrice = product.price
-    // Cách tính chuẩn: lấy giá của từng item nhân cho số lượng của chính nó
     mockCart.total = mockCart.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
 
-    console.log("Giỏ hàng sau khi thêm:", mockCart);
-
-    // 3. Trả về đúng format mà bài Test yêu cầu
+    // 3. Trả về kết quả Thành công
     return {
         success: true,
-        message: 'Thêm vào giỏ hàng thành công',
+        message: 'Thêm vào giỏ hàng thành công', // Chứa chữ "thành công" -> Hiện thẻ xanh
         cartTotal: mockCart.total
     };
 };
 
-export const updateQuantity = async (userId, productId, change) => {
-    // 1. Tìm đúng sản phẩm Laptop trong danh sách
-    const item = mockCart.items.find(i => i.productId === productId);
+export const updateQuantity = async (userId, productId, newQuantity) => {
+    // 1. Tìm vị trí sản phẩm trong giỏ hàng
+    const itemIndex = mockCart.items.findIndex(i => i.productId === productId);
     
-    if (item) {
-        // 2. Cập nhật số lượng của chính sản phẩm đó
-        item.quantity += change;
-        if (item.quantity < 1) item.quantity = 1;
+    if (itemIndex !== -1) {
+        if (newQuantity <= 0) {
+            // NẾU SỐ LƯỢNG <= 0: Xóa sản phẩm khỏi danh sách
+            mockCart.items.splice(itemIndex, 1);
+        } else {
+            // NẾU SỐ LƯỢNG > 0: Cập nhật số lượng mới
+            mockCart.items[itemIndex].quantity = newQuantity;
+        }
 
-        // 3. Tính toán lại tổng tiền dựa trên số lượng mới
-        mockCart.total = item.quantity * item.price;
-        
-        console.log("Số lượng mới trong Service:", item.quantity);
+        // 2. Cập nhật lại tổng tiền cho toàn bộ giỏ[cite: 3]
+        mockCart.total = mockCart.items.reduce((sum, i) => sum + (i.quantity * i.price), 0);
     }
-    return { success: true };
+    
+    return { 
+        success: true, 
+        message: 'Cập nhật số lượng thành công', 
+        cartTotal: mockCart.total 
+    };
 };
 
 export const checkout = async (userId) => {

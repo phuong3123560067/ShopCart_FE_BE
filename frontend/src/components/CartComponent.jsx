@@ -3,6 +3,8 @@ import * as cartService from "../services/cartService";
 import * as inventoryService from "../services/inventoryService";
 import * as orderService from "../services/orderService";
 import { useNavigate } from "react-router-dom";//chuyển hướng sau khi đặt hàng thành công
+import { PRODUCT_AVAILABLE, PRODUCT_OUT_OF_STOCK } from "../tests/mockData/cart.mock";
+
 
 function CartComponent({ userId }) {
     const [cart, setCart] = useState(null);
@@ -27,54 +29,53 @@ function CartComponent({ userId }) {
         fetchCartData();
     }, [userId]);
 
-    const handleAddToCart = async () => {
-        const productToAdd = { productId: "P999", productName: "Sản phẩm mới", price: 100000 };
-        const response = await cartService.addToCart(userId, productToAdd);
+    const handleAddToCart = async (product) => {
+        const response = await cartService.addToCart(userId, product);
         
         if (response.success) {
             setMessage(response.message);
-            await fetchCartData(); 
+            await fetchCartData(); // Cập nhật lại giỏ hàng để hiển thị số lượng mới
         } else {
             setMessage(response.message);
         }
     };
 
     const handleUpdateQuantity = async (productId, change) => {
-        // 1. Tìm sản phẩm đang thao tác trong local state để kiểm tra trước khi gọi API
         const item = cart.items.find(i => i.productId === productId);
-        
-        // 2. Logic chặn: Nếu hiện tại là 11 và người dùng muốn cộng thêm (+1)
-        if (item && item.quantity >= 11 && change > 0) {
-            setMessage("Rất tiếc, sản phẩm trong kho đã hết!");
-            return; // Dừng lại, không gọi API update nữa
-        }
+        if (!item) return;
 
-        // 3. Nếu hợp lệ thì mới tiến hành update như cũ
-        await cartService.updateQuantity(userId, productId, change);
-        await fetchCartData();
-        setMessage(""); // Xóa thông báo cũ nếu thao tác hợp lệ
+        const newQty = item.quantity + change;
+
+        try {
+            await cartService.updateQuantity(userId, productId, newQty);
+            
+            await fetchCartData(); 
+            setMessage(""); 
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     const handleCheckout = async () => {
         setLoading(true);
-        // Kiểm tra kho (Giả lập kiểm tra số lượng > 11)
-        const hasError = cart.items.some(item => item.quantity > 11);
+    
+        // Gọi hàm checkStock
+        const stockStatus = await inventoryService.checkStock(cart.items);
         
-        if (hasError) {
-            setMessage("Rất tiếc, sản phẩm trong kho đã hết!");
+        if (!stockStatus.available) {
+            // Hiển thị thông báo có chứa tên sản phẩm
+            setMessage(stockStatus.message);
             setLoading(false);
-            return; // Chặn không cho navigate sang trang checkout[cite: 3]
+            return; 
         }
 
-        // Nếu mọi thứ ổn, mới chuyển sang trang Checkout
+        // Nếu kho ổn, tiếp tục thanh toán
         setLoading(false);
         navigate("/checkout", { state: { cartData: cart } });
     };
 
     // Thêm dấu ?. và kiểm tra nếu chưa có cart thì mặc định là 0
-    const finalTotal = cart?.items 
-        ? cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0) 
-        : 0;
+    const finalTotal = cart?.total || 0;
 
     if (error) return <div style={{ color: 'red', padding: '20px' }}>{error}</div>;
     if (loading) return <div style={{ padding: '20px' }}>Đang tải giỏ hàng...</div>;
@@ -84,11 +85,19 @@ function CartComponent({ userId }) {
             <h2 style={{ borderBottom: '2px solid #333', paddingBottom: '10px' }}>Giỏ hàng của bạn</h2>
             
             <button 
-                data-testid="add-to-cart-btn"
-                onClick={handleAddToCart}
+                data-testid="add-available-btn"
+                onClick={() => handleAddToCart(PRODUCT_AVAILABLE)}
                 style={{ marginBottom: '10px', padding: '8px', cursor: 'pointer' }}
             >
-                + Thêm nhanh sản phẩm mẫu
+                + Sản phẩm còn hàng
+            </button>
+
+            <button 
+                data-testid="add-out-of-stock-btn"
+                onClick={() => handleAddToCart(PRODUCT_OUT_OF_STOCK)}
+                style={{ marginBottom: '10px', padding: '8px', cursor: 'pointer' }}
+            >
+                + Sản phẩm hết hàng
             </button>
 
             {message && (
@@ -136,14 +145,15 @@ function CartComponent({ userId }) {
                                 <div>
                                     <span style={{ fontWeight: 'bold' }}>{item.productName}</span>
                                     <span style={{ margin: '0 10px' }}>-</span>
-                                    {/* 2. Thêm testid để robot đọc được con số số lượng hiện tại */}
-                                    <span>Số lượng: <strong data-testid="quantity-value">{item.quantity}</strong></span>
+                                    <span>Số lượng: <strong data-testid={`quantity-value-${item.productId}`}>{item.quantity}</strong></span>
                                 </div>
                                 <div style={{ display: 'flex', gap: '5px' }}>
-                                    <button onClick={() => handleUpdateQuantity(item.productId, -1)}>-</button>
                                     <button 
-                                        // 3. Dùng một cái tên chung cho nút tăng để robot dễ tìm trong phạm vi dòng
-                                        data-testid="increase-qty-btn"
+                                        data-testid={`decrease-btn-${item.productId}`} 
+                                        onClick={() => handleUpdateQuantity(item.productId, -1)}
+                                    >-</button>
+                                    <button 
+                                        data-testid={`increase-qty-${item.productId}`}
                                         onClick={() => handleUpdateQuantity(item.productId, 1)}
                                     >+</button>
                                 </div>

@@ -3,15 +3,21 @@ import { Locator, Page } from '@playwright/test';
 export class CheckoutPage {
   readonly page: Page;
   readonly discountInput: Locator;
+  readonly discountAmount: Locator;
   readonly applyBtn: Locator;
+  readonly subtotalPrice: Locator;
+  readonly shippingFee: Locator;
   readonly finalTotal: Locator;
   readonly confirmBtn: Locator;
   readonly successHeader: Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.discountInput = page.locator('input[placeholder*="GIAM10"]');
+    this.discountInput = page.locator('input[placeholder*="GIAM10"]'); 
+    this.discountAmount = page.locator('[data-testid="discount-amount"]');
     this.applyBtn = page.locator('button:has-text("Áp dụng")');
+    this.subtotalPrice = page.locator('[data-testid="subtotal-price"]');
+    this.shippingFee = page.locator('[data-testid="shipping-fee"]');
     this.finalTotal = page.locator('[data-testid="final-total"]');
     this.confirmBtn = page.locator('[data-testid="confirm-checkout"]');
     this.successHeader = page.locator('h2');

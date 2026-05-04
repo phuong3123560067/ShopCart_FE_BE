@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { CartPage } from '../page-object/CartPage';
-import { CheckoutPage } from '../page-object/CheckoutPage'; // Import cả 2 trang[cite: 2]
+import { CheckoutPage } from '../page-object/CheckoutPage';
 
 test.describe('Purchase E2E Tests - ShopCart System', () => {
     let cartPage: CartPage;
@@ -13,30 +13,37 @@ test.describe('Purchase E2E Tests - ShopCart System', () => {
         await page.goto('http://localhost:5173');
         await page.evaluate(() => localStorage.clear());
         await page.reload();
-        await cartPage.addSampleProduct();
+        // Giả sử hàm này thêm sản phẩm trị giá 20.100.000 VNĐ
+        await cartPage.addAvailableProduct(); 
     });
 
-    test('b) Kiểm tra tính toán chi phí: Subtotal, Discount, Shipping', async ({ page }) => {
-        // Sử dụng hành động từ Class
+    test('b) Kiểm tra tính toán chi phí: Subtotal, Discount, Final Total', async ({ page }) => {
         await cartPage.goToCheckout();
         await expect(page).toHaveURL(/.*checkout/);
 
-        // Kiểm tra Subtotal thông qua locator đã khai báo trong CheckoutPage[cite: 4]
-        // (Lưu ý: Nếu CheckoutPage chưa có subtotalPrice, bạn có thể thêm vào constructor của nó)
-        const subtotal = page.locator('[data-testid="subtotal-price"]');
-        await expect(subtotal).toContainText('20,100,000'); 
+        // Kiểm tra Tạm tính
+        await expect(checkoutPage.subtotalPrice).toContainText('21,100,000');
 
-        // Áp dụng mã giảm giá bằng hàm[cite: 2, 4]
+        // Kiểm tra Phí ship
+        await expect(checkoutPage.shippingFee).toContainText('30,000');
+
+        // Áp dụng mã giảm giá
         await checkoutPage.applyDiscount('GIAM10');
 
-        await expect(page.locator('[data-testid="discount-amount"]')).toContainText('2,010,000');
-        await expect(checkoutPage.finalTotal).toContainText('18,120,000');
+        // Kiểm tra số tiền giảm (10% của 21.100.000 = 2.110.000)
+        await expect(checkoutPage.discountAmount).toContainText('2,110,000');
+        
+        // Kiểm tra Tổng thanh toán cuối cùng (21.100.000 - 2.110.000 = 19.020.000)
+        await expect(checkoutPage.finalTotal).toContainText('19,020,000');
     });
 
-    test('a) Luồng hoàn chỉnh từ Giỏ hàng đến Thanh toán', async ({ page }) => {
+    test('a) Luồng hoàn chỉnh từ Giỏ hàng đến Xác nhận đơn hàng', async ({ page }) => {
         await cartPage.goToCheckout();
-        await checkoutPage.confirmOrder(); // Gọi hàm confirmOrder[cite: 2, 4]
+        
+        // Thực hiện xác nhận đơn hàng
+        await checkoutPage.confirmOrder();
 
+        // Kiểm tra chuyển hướng đến trang thành công
         await expect(page).toHaveURL(/.*order-confirmation/);
         await expect(checkoutPage.successHeader).toContainText(/thành công/i);
     });

@@ -2,7 +2,8 @@ import { Locator, Page } from '@playwright/test';
 
 export class CartPage {
   readonly page: Page;
-  readonly addSampleBtn: Locator;
+  readonly addAvailableBtn: Locator;
+  readonly addOutOfStockBtn: Locator;
   readonly checkoutBtn: Locator;
   readonly successToast: Locator;
   readonly inventoryError: Locator;
@@ -10,7 +11,8 @@ export class CartPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.addSampleBtn = page.locator('[data-testid="add-to-cart-btn"]');
+    this.addAvailableBtn = page.locator('[data-testid="add-available-btn"]');
+    this.addOutOfStockBtn = page.locator('[data-testid="add-out-of-stock-btn"]');
     this.checkoutBtn = page.locator('[data-testid="checkout-btn"]');
     this.successToast = page.locator('[data-testid="success-toast"]');
     this.inventoryError = page.locator('[data-testid="inventory-error"]');
@@ -22,13 +24,22 @@ export class CartPage {
     return this.page.locator(`[data-testid="cart-item-${productId}"]`);
   }
 
-  async addSampleProduct() {
-    await this.addSampleBtn.click();
+  async addAvailableProduct() {
+    await this.addAvailableBtn.click();
+  }
+
+  async addOutOfStockProduct() {
+    await this.addOutOfStockBtn.click();
   }
 
   async increaseQty(productId: string) {
     const row = this.getProductRow(productId);
-    await row.locator('[data-testid="increase-qty-btn"]').click();
+    await row.locator(`[data-testid="increase-qty-${productId}"]`).click();
+  }
+
+  async decreaseQty(productId: string) {
+    const row = this.getProductRow(productId);
+    await row.locator(`[data-testid="decrease-btn-${productId}"]`).click();
   }
 
   async goToCheckout() {

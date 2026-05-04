@@ -1,12 +1,11 @@
-//hàm tính toán giá trị đơn hàng dựa trên các sản phẩm trong giỏ hàng, coupon và phí vận chuyển
 export function calculateOrderPrice(cartItems, coupon = null, shippingFee = 0) {
     if (!Array.isArray(cartItems)) {
         throw new Error("Invalid cart");
     }
 
     const subtotal = cartItems.reduce((sum, item) => {
-        return sum + item.price * item.quantity;
-    }, 0); //tính tổng tiền của các sản phẩm trong giỏ hàng
+        return sum + (item.price * item.quantity);
+    }, 0);
 
     let discount = 0;
 
@@ -15,31 +14,34 @@ export function calculateOrderPrice(cartItems, coupon = null, shippingFee = 0) {
             discount = subtotal * (coupon.value / 100);
         } else if (coupon.type === "fixed") {
             discount = coupon.value;
-        } //tính giảm giá dựa trên loại coupon
+        }
     }
 
     if (shippingFee < 0) {
         throw new Error("Invalid shipping fee");
     }
 
-    const total = subtotal - discount + shippingFee;
+    // Sử dụng Math.max(0, ...) để tránh trường hợp tổng tiền bị âm nếu discount > subtotal
+    const total = Math.max(0, subtotal - discount + shippingFee);
 
-    return { //trả về một đối tượng chứa subtotal, discount, shippingFee và total
-        subtotal,
-        discount,
-        shippingFee,
-        total
+    return {
+        // Dùng Math.round để kết quả luôn là số nguyên tròn (tiền VNĐ)
+        subtotal: Math.round(subtotal),
+        discount: Math.round(discount),
+        shippingFee: Math.round(shippingFee),
+        total: Math.round(total)
     };
 }
 
-//hàm kiểm tra xem số lượng sản phẩm trong giỏ hàng có vượt quá số lượng tồn kho hay không
 export function checkInventoryAvailability(cartItems) {
+    // Thêm kiểm tra mảng đầu vào để tránh lỗi runtime
+    if (!Array.isArray(cartItems)) return false;
+
     for (const item of cartItems) {
+        // Kiểm tra logic vượt tồn kho
         if (item.quantity > item.stock) {
             return false;
         }
     }
     return true;
 }
-
-

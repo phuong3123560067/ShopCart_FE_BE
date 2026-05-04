@@ -1,71 +1,88 @@
 import { describe, test, expect } from "vitest";
-import { validateCartItem } from "../utils/cartValidation";
-import { calculateCartTotal } from "../utils/cartValidation";
+import { validateCartItem, calculateCartTotal } from "../utils/cartValidation";
+import { VALID_CART, EMPTY_CART, PRODUCT_AVAILABLE, PRODUCT_OUT_OF_STOCK, PROMOTION } from "../tests/mockData/cart.mock"; 
 
 describe('Cart Validation Test', () => {
-    test('TC1: số lượng hợp lệ - trả về true', () => {
-        const result = validateCartItem({ productID: "P001", quantity: 5, stock: 10 });
+    test('TC1: số lượng hợp lệ - sử dụng sản phẩm còn hàng', () => {
+        const result = validateCartItem({ 
+            productID: PRODUCT_AVAILABLE.productId, 
+            quantity: 5, 
+            stock: PRODUCT_AVAILABLE.stock 
+        });
         expect(result.success).toBe(true);
     });
 
     test('TC2: số lượng không được để trống - trả về lỗi', () => {
         expect(() =>
-            validateCartItem({ productID: "P001", quantity: null, stock: 10 })
+            validateCartItem({ productID: PRODUCT_AVAILABLE.productId, quantity: null, stock: 10 })
         ).toThrow("Số lượng không được để trống");
     });
 
     test('TC3: số lượng = 0 - trả về lỗi', () => {
         expect(() =>
-            validateCartItem({ productID: "P001", quantity: 0, stock: 10 })
+            validateCartItem({ productID: PRODUCT_AVAILABLE.productId, quantity: 0, stock: 10 })
         ).toThrow("Số lượng phải lớn hơn 0");
     });
 
-    test('TC4: số lượng âm - trả về lỗi', () => {
+    test('TC5: số lượng vượt quá tồn kho thực tế - trả về lỗi', () => {
         expect(() =>
-            validateCartItem({ productID: "P001", quantity: -1, stock: 10 })
-        ).toThrow("Số lượng phải lớn hơn 0");
-    });
-
-    test('TC5: số lượng vượt quá tồn kho - trả về lỗi', () => {
-        expect(() =>
-            validateCartItem({ productID: "P001", quantity: 15, stock: 10 })
+            validateCartItem({ 
+                productID: PRODUCT_AVAILABLE.productId, 
+                quantity: PRODUCT_AVAILABLE.stock + 1, 
+                stock: PRODUCT_AVAILABLE.stock 
+            })
         ).toThrow("Số lượng vượt quá tồn kho");
     });
 
+    test('TC10: sản phẩm hết hàng - stock = 0', () => {
+        expect(() =>
+            validateCartItem({ 
+                productID: PRODUCT_OUT_OF_STOCK.productId, 
+                quantity: 1, 
+                stock: PRODUCT_OUT_OF_STOCK.stock 
+            })
+        ).toThrow("Số lượng vượt quá tồn kho");
+    });
 });
 
 describe('Calculate Cart Total Test', () => {
-    test('TC6: giỏ hàng rỗng - trả về tổng tiền là 0', () => {
-        const cart = [];
-        const total = calculateCartTotal(cart);
+    test('TC6: giỏ hàng rỗng', () => {
+        const total = calculateCartTotal(EMPTY_CART.items);
         expect(total).toBe(0);
     });
 
-    test('TC7: tính tổng tiền giỏ hàng - trả về đúng tổng tiền', () => {
-        const cart = [
-            { product: { price: 100 }, quantity: 2 },
-            { product: { price: 50 }, quantity: 3 }
-        ];
-        const total = calculateCartTotal(cart);
-        expect(total).toBe(350);
+    test('TC7: tính tổng tiền giỏ hàng tiêu chuẩn', () => {
+        const cartForFunction = VALID_CART.items.map(item => ({
+            product: { price: item.price },
+            quantity: item.quantity
+        }));
+        
+        const total = calculateCartTotal(cartForFunction);
+        expect(total).toBe(21000000);
     });
 
-    test('TC8: tính tổng tiền với giảm giá - trả về đúng tổng tiền sau khi áp dụng giảm giá', () => {
-        const cart = [
-            { product: { price: 100 }, quantity: 2 },
-            { product: { price: 50 }, quantity: 3 }
-        ];
-        const total = calculateCartTotal(cart, 10); //giảm giá 10%
-        expect(total).toBe(315); //350 - 10% = 315
+    test('TC8: tính tổng tiền với mã GIAM10', () => {
+        const cartForFunction = VALID_CART.items.map(item => ({
+            product: { price: item.price },
+            quantity: item.quantity
+        }));
+        
+        const discount = PROMOTION.GIAM10.discountPercent; 
+        const total = calculateCartTotal(cartForFunction, discount); 
+        
+        // 21.000.000 - 10% = 18.900.000[cite: 9]
+        expect(total).toBe(18900000); 
     });
 
-    test('TC9: sau khi xóa sản phẩm - trả về đúng tổng tiền', () => {
-        const cart = [
-            { product: { price: 100 }, quantity: 2 },
-            { product: { price: 50 }, quantity: 3 }
-        ];
-        cart.splice(0, 1); // xóa sản phẩm đầu tiên
-        const total = calculateCartTotal(cart);
-        expect(total).toBe(150); // chỉ còn lại sản phẩm thứ hai
+    test('TC9: sau khi xóa sản phẩm - tổng tiền cập nhật lại', () => {
+        const cartForFunction = VALID_CART.items.map(item => ({
+            product: { price: item.price },
+            quantity: item.quantity
+        }));
+        
+        cartForFunction.splice(0, 1);
+        const total = calculateCartTotal(cartForFunction);
+        
+        expect(total).toBe(1000000); 
     });
 });

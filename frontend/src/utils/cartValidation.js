@@ -13,12 +13,14 @@ export function validateCartItem({productID, quantity, stock}) {
 
 export function calculateCartTotal(cart, discount = 0) {
     if (!Array.isArray(cart) || cart.length === 0) {
-        return 0; //nếu giỏ hàng không phải là một mảng hoặc giỏ hàng rỗng, trả về tổng tiền là 0
+        return 0;
     }
 
-    let total = cart.reduce((sum,item) => {
-        return sum + item.product.price * item.quantity;
+    let total = cart.reduce((sum, item) => {
+        const price = item.price || (item.product && item.product.price) || 0;
+        return sum + (price * item.quantity);
     }, 0);
 
-    return total * (1 - discount/100);
+    // Làm tròn để tránh lỗi số lẻ khi nhân phần trăm
+    return Math.round(total * (1 - discount / 100));
 }

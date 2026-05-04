@@ -1,103 +1,84 @@
 import { describe, test, expect } from "vitest";
 import { calculateOrderPrice, checkInventoryAvailability } from "../utils/priceCalculation";
+import { VALID_CART, PROMOTION, SHIPPING, OUT_OF_STOCK_CART } from "../tests/mockData/cart.mock"; 
 
 describe("Price Calculation Tests", () => {
 
-    test("TC1: Tính tổng giá không có giảm giá", () => {
-        const items = [
-            { price: 15000000, quantity: 2 },
-            { price: 500000, quantity: 1 },
-        ];
+    test("TC1: Tính tổng giá không có giảm giá - Dùng VALID_CART", () => {
+        const shippingFee = SHIPPING.DEFAULT; // 30000
+        const result = calculateOrderPrice(VALID_CART.items, null, shippingFee);
 
-        const result = calculateOrderPrice(items, null, 50000);
-
-        expect(result.subtotal).toBe(30500000);
-        expect(result.discount).toBe(0);
-        expect(result.shippingFee).toBe(50000);
-        expect(result.total).toBe(30550000);
+        // VALID_CART subtotal = 21,000,000[cite: 12]
+        expect(result.subtotal).toBe(21000000); 
+        expect(result.discount).toBe(0); 
+        expect(result.shippingFee).toBe(30000); 
+        expect(result.total).toBe(21030000);
     });
 
-    test("TC2: Áp dụng giảm giá 10%", () => {
-        const items = [
-            { price: 1000000, quantity: 2 }, // 2tr
-        ];
+    test("TC2: Áp dụng mã giảm giá GIAM10", () => {
+        const coupon = { 
+            type: "percent", 
+            value: PROMOTION.GIAM10.discountPercent // 10%[cite: 12]
+        }; 
 
-        const coupon = { type: "percent", value: 10 };
+        const result = calculateOrderPrice(VALID_CART.items, coupon, 0);
 
-        const result = calculateOrderPrice(items, coupon, 0);
-
-        expect(result.subtotal).toBe(2000000);
-        expect(result.discount).toBe(200000);
-        expect(result.total).toBe(1800000);
+        expect(result.subtotal).toBe(21000000); 
+        expect(result.discount).toBe(2100000); // 10% của 21tr
+        expect(result.total).toBe(18900000); 
     });
 
-    test("TC3: Áp dụng giảm giá số tiền cố định", () => {
-        const items = [
-            { price: 1000000, quantity: 2 }, // 2tr
-        ];
+    test("TC3: Áp dụng mã giảm giá cố định (Ví dụ FREESHIP)", () => {
+        const coupon = { 
+            type: "fixed", 
+            value: PROMOTION.FREESHIP.discountAmount // 30000
+        }; 
 
-        const coupon = { type: "fixed", value: 300000 };
+        const result = calculateOrderPrice(VALID_CART.items, coupon, 0);
 
-        const result = calculateOrderPrice(items, coupon, 0);
-
-        expect(result.subtotal).toBe(2000000);
-        expect(result.discount).toBe(300000);
-        expect(result.total).toBe(1700000);
+        expect(result.subtotal).toBe(21000000); 
+        expect(result.discount).toBe(30000);
+        expect(result.total).toBe(20970000); 
     });
 
-    test("TC4: Tính phí vận chuyển", () => {
-        const items = [
-            { price: 500000, quantity: 2 }, // 1tr
-        ];
+    test("TC4: Tính phí vận chuyển EXPRESS", () => {
+        const shippingFee = SHIPPING.EXPRESS; // 50000
+        const result = calculateOrderPrice(VALID_CART.items, null, shippingFee);
 
-        const result = calculateOrderPrice(items, null, 50000);
-
-        expect(result.total).toBe(1050000);
+        expect(result.shippingFee).toBe(50000); 
+        expect(result.total).toBe(21050000); 
     });
 
-    test("TC5: Tổng cuối cùng (subtotal + shipping - discount)", () => {
-        const items = [
-            { price: 1000000, quantity: 1 }, // 1tr
-        ];
+    test("TC5: Tổng cuối cùng (Subtotal + Shipping - Discount)", () => {
+        const coupon = { type: "percent", value: 20 }; 
+        const shippingFee = SHIPPING.DEFAULT; // 30000[cite: 12]
 
-        const coupon = { type: "percent", value: 20 }; // -200k
+        const result = calculateOrderPrice(VALID_CART.items, coupon, shippingFee);
 
-        const result = calculateOrderPrice(items, coupon, 50000);
-
-        expect(result.total).toBe(850000); // 1tr - 200k + 50k
+        // 21tr - (21tr * 0.2) + 30k = 16,8tr + 30k = 16,830,000
+        expect(result.total).toBe(16830000); 
     });
 });
 
 describe("Inventory Tests", () => {
 
     test("TC6: Tất cả sản phẩm đủ hàng", () => {
-        const items = [
-            { quantity: 2, stock: 5 },
-            { quantity: 1, stock: 10 },
-        ];
-
-        const result = checkInventoryAvailability(items);
-
-        expect(result).toBe(true);
+        const result = checkInventoryAvailability(VALID_CART.items);
+        expect(result).toBe(true); 
     });
 
     test("TC7: Có sản phẩm vượt tồn kho", () => {
+        // Tạo dữ liệu giả lập vượt stock dựa trên dữ liệu thật
         const items = [
-            { quantity: 6, stock: 5 },
-        ];
+            { quantity: 11, stock: 10 } 
+        ]; 
 
         const result = checkInventoryAvailability(items);
-
-        expect(result).toBe(false);
+        expect(result).toBe(false); 
     });
 
     test("TC8: Sản phẩm hết hàng", () => {
-        const items = [
-            { quantity: 1, stock: 0 },
-        ];
-
-        const result = checkInventoryAvailability(items);
-
-        expect(result).toBe(false);
+        const result = checkInventoryAvailability(OUT_OF_STOCK_CART.items);
+        expect(result).toBe(false); 
     });
 });

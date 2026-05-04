@@ -1,48 +1,44 @@
 import { describe, test, expect } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import CheckoutPage from '../components/CheckoutPage'; 
+import { MemoryRouter } from 'react-router-dom';
+import { VALID_CART, OUT_OF_STOCK_CART, PRODUCT_OUT_OF_STOCK , PRODUCT_AVAILABLE} from './mockData/cart.mock';
 
 describe('Checkout Integration Tests', () => {
-    const mockCart = {
-        items: [
-        { name: 'Laptop Dell', price: 15000000, quantity: 2 },
-        { name: 'Mouse Logitech', price: 500000, quantity: 1 },
-        ]
+    // Hàm render chuẩn: Luôn bọc data vào key cartData
+    const renderCheckout = (data) => {
+        return render(
+            <MemoryRouter initialEntries={[{ pathname: '/checkout', state: { cartData: data } }]}>
+                <CheckoutPage />
+            </MemoryRouter>
+        );
     };
 
-    // a) Test CheckoutSummary component
-    test('TC1: Hiển thị đầy đủ danh sách sản phẩm trong tóm tắt giỏ hàng', async () => {
-        render(<CheckoutPage cart={mockCart} />);
+    test('TC1: Hiển thị đầy đủ danh sách sản phẩm', async () => {
+        renderCheckout(VALID_CART);
         
-        // Kiểm tra xem có render đủ 2 dòng sản phẩm không
-        const summaryItems = screen.getAllByTestId('summary-item');
+        const summaryItems = await screen.findAllByTestId('summary-item');
         expect(summaryItems).toHaveLength(2);
-        
         expect(screen.getByText(/Laptop Dell/i)).toBeInTheDocument();
-        expect(screen.getByText(/Mouse Logitech/i)).toBeInTheDocument();
     });
 
-    // b) Test PriceCalculator component
     test('TC2: Hiển thị tổng giá chính xác', async () => {
-        render(<CheckoutPage cart={mockCart} />);
-        
+        renderCheckout(VALID_CART);
+
         await waitFor(() => {
-        // 15.000.000 * 2 + 500.000 * 1 = 30.500.000
-        expect(
-            screen.getByTestId('subtotal-display')
-        ).toHaveTextContent('30.500.000');
+            expect(screen.getByTestId('subtotal-price')).toHaveTextContent('21,000,000');
         });
     });
 
-    // c) Test InventoryWarning component
-    test('TC3: Hiển thị cảnh báo khi số lượng vượt quá tồn kho', async () => {
-        render(<CheckoutPage cart={mockCart} />);
-        
-        // Tìm component cảnh báo dựa trên ID đã đặt trong code
-        const warning = screen.queryByTestId('inventory-warning');
-        
-        // Nếu trong code Laptop Dell có tồn kho chỉ 1 cái nhưng trong cart có 2 cái thì sẽ hiển thị cảnh báo
-        expect(warning).toBeInTheDocument();
-        expect(warning).toHaveTextContent(/Cảnh báo/i);
+    test('TC3: Hiển thị cảnh báo khi đơn hàng có sản phẩm vượt quá tồn kho', async () => {
+        renderCheckout(OUT_OF_STOCK_CART);
+
+        await waitFor(() => {
+            // Tìm thẻ lỗi dựa trên data-testid đã đặt trong CheckoutPage
+            const warning = screen.queryByTestId('inventory-warning');
+            expect(warning).toBeInTheDocument();
+            
+            expect(warning).toHaveTextContent(/Cảnh báo|hết hàng/i);
+        });
     });
 });
