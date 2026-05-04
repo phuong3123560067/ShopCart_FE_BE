@@ -1,7 +1,7 @@
 package com.shopcart.controller;
 
-import com.shopcart.entity.ProductExample;
-import com.shopcart.repository.ProductRepositoryExample;
+import com.shopcart.entity.Product;
+import com.shopcart.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,10 +13,10 @@ import java.util.List;
 public class TestController {
 
     @Autowired
-    private ProductRepositoryExample productRepository;
+    private ProductRepository productRepository;
 
     @GetMapping("/test-data")
-    public List<ProductExample> getTestData() {
+    public List<Product> getTestData() {
         return productRepository.findAll();
     }
 }
