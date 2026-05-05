@@ -124,12 +124,12 @@ describe('Cart Component Integration Tests', () => {
         render(<BrowserRouter><CartComponent userId="user01" /></BrowserRouter>);
         
         // Tìm nút "Sản phẩm còn hàng" theo ID bạn đã đặt ở UI
-        const addBtn = await screen.findByTestId('add-available-btn');
+        const addBtn = await screen.findByTestId('add-P999-btn');
         fireEvent.click(addBtn);
 
         await waitFor(() => {
             // Kiểm tra xem Service có được gọi với đúng sản phẩm còn hàng không
-            expect(cartService.addToCart).toHaveBeenCalledWith('user01', expect.objectContaining({ stock: 10 }));
+            expect(cartService.addToCart).toHaveBeenCalledWith('user01', expect.objectContaining({ stock: 5 }));
             
             // Kiểm tra UI hiển thị thẻ thành công (success-toast)
             const successMsg = screen.getByTestId('success-toast');
@@ -137,23 +137,14 @@ describe('Cart Component Integration Tests', () => {
         });
     });
 
-    test('TC8: Thêm sản phẩm HẾT HÀNG thất bại và hiển thị thông báo đỏ', async () => {
-        // Giả lập API trả về thất bại
-        cartService.addToCart.mockResolvedValue({
-            success: false,
-            message: 'Sản phẩm đã hết hàng'
-        });
-
+    test('TC8: Nút thêm sản phẩm bị khóa khi hết hàng', async () => {
         render(<BrowserRouter><CartComponent userId="user01" /></BrowserRouter>);
         
-        // Tìm nút "Sản phẩm hết hàng" theo ID bạn đã đặt ở UI
-        const addBtn = await screen.findByTestId('add-out-of-stock-btn');
-        fireEvent.click(addBtn);
-
-        await waitFor(() => {
-            // Kiểm tra UI hiển thị thẻ lỗi (inventory-error)
-            const errorMsg = screen.getByTestId('inventory-error');
-            expect(errorMsg).toHaveTextContent(/hết hàng/i);
-        });
+        // P994 (Bàn phím cơ) có stock: 0 trong PRODUCT_LIST
+        const addBtn = await screen.findByTestId('add-P994-btn');
+        
+        expect(addBtn).toBeDisabled(); // Kiểm tra nút bị khóa
+        expect(addBtn).toHaveTextContent(/Hết hàng/i);
     });
+
 });

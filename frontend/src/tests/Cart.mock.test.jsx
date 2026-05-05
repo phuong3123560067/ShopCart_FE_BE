@@ -16,7 +16,6 @@ describe('Cart Mock Tests', () => {
 
     // --- Câu a & b: Test trường hợp THÀNH CÔNG ---
     test('Mock: Thêm sản phẩm thành công và verify mock calls', async () => {
-        // Thiết lập kết quả giả định trả về Thành công
         cartService.addToCart.mockResolvedValue({
             success: true,
             message: 'Thêm vào giỏ hàng thành công',
@@ -26,14 +25,15 @@ describe('Cart Mock Tests', () => {
         cartService.getCart.mockResolvedValue(VALID_CART);
 
         render(
-        <BrowserRouter><CartComponent userId="user01" /></BrowserRouter>
+            <BrowserRouter><CartComponent userId="user01" /></BrowserRouter>
         );
 
-        const addBtn = await screen.findByTestId('add-available-btn');
+        // 2. Tìm nút bấm theo ID sản phẩm có trong PRODUCT_LIST (P999 - iPhone)
+        const addBtn = await screen.findByTestId('add-P999-btn');
         fireEvent.click(addBtn);
 
         await waitFor(() => {
-            // Xác minh (Verify) xem hàm addToCart đã được gọi đúng với userId "user01" chưa
+            // 3. Xác minh Service được gọi đúng với object sản phẩm P999
             expect(cartService.addToCart).toHaveBeenCalledWith(
                 'user01',
                 expect.objectContaining({
@@ -41,34 +41,38 @@ describe('Cart Mock Tests', () => {
                 })
             );
             
+            // 4. Kiểm tra Toast thành công
             expect(screen.getByTestId('success-toast')).toHaveTextContent(/thành công/i);       
         });
     });
 
     //--- Câu b: Test trường hợp THẤT BẠI (Failed Response) ---
     test('Mock: Thêm sản phẩm thất bại và hiển thị lỗi', async () => {
-        // Thiết lập kết quả giả định trả về Thất bại
+        // 1. Thiết lập kết quả giả định trả về Thất bại
         cartService.addToCart.mockResolvedValue({
             success: false,
             message: 'Sản phẩm đã hết hàng'
         });
 
         render(
-        <BrowserRouter><CartComponent userId="user01" /></BrowserRouter>
+            <BrowserRouter><CartComponent userId="user01" /></BrowserRouter>
         );
 
-        const addBtn = await screen.findByTestId('add-out-of-stock-btn');
+        // 2. Chọn một sản phẩm còn hàng trong danh sách nhưng mock API trả về lỗi (để nút không bị disabled)
+        // Ví dụ dùng P998 (MacBook) có stock: 8
+        const addBtn = await screen.findByTestId('add-P998-btn');
         fireEvent.click(addBtn);
 
         await waitFor(() => {
-            // Xác minh (Verify) xem hàm addToCart đã được gọi đúng với userId "user01" chưa
+            // 3. Xác minh Service được gọi đúng với mã P998
             expect(cartService.addToCart).toHaveBeenCalledWith(
                 'user01',
                 expect.objectContaining({
-                    productId: 'P000'
+                    productId: 'P998'
                 })
             );
             
+            // 4. Kiểm tra Toast lỗi hiển thị đúng (inventory-error)
             expect(screen.getByTestId('inventory-error')).toHaveTextContent(/hết hàng/i);       
         });
     });

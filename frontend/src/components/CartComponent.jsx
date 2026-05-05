@@ -6,7 +6,10 @@ import { useNavigate } from "react-router-dom";//chuyển hướng sau khi đặ
 import { PRODUCT_LIST } from "../tests/mockData/cart.mock";
 
 
-function CartComponent({ userId }) {
+function CartComponent({ userId: propUserId }) {
+    const savedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+    const userId = propUserId || (savedUser ? savedUser.id : "user01");
+
     const [cart, setCart] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -189,7 +192,9 @@ function CartComponent({ userId }) {
                 borderRadius: '12px',
                 border: '1px solid #edf2f7'
             }}>
-                <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#4a5568', fontSize: '20px' }}>Giỏ hàng của bạn</h3>
+                <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#4a5568', fontSize: '20px' }}>
+                    🛍️ Giỏ hàng của {JSON.parse(localStorage.getItem('currentUser'))?.fullName || "bạn"}
+                </h3>
                 
                 {(!cart || cart.items.length === 0) ? (
                     <div data-testid="empty-cart-message" style={{ textAlign: 'center', padding: '40px', color: '#a0aec0' }}>

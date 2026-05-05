@@ -1,54 +1,35 @@
-import { VALID_CART, EMPTY_CART } from "../tests/mockData/cart.mock";
+import { calculateCartTotal } from "../utils/cartValidation";
+import { EMPTY_CART } from "../tests/mockData/cart.mock";
 
-// let mockCart = { ... VALID_CART};
-let mockCart = { ... EMPTY_CART};
+let mockCart = { ...EMPTY_CART }; 
 
 export const getCart = async (userId) => {
-    // Trả về một bản sao mới nhất của giỏ hàng
     return { ...mockCart };
 };
 
 export const addToCart = async (userId, product) => {
-    // --- BƯỚC QUAN TRỌNG NHẤT: Kiểm tra tồn kho trước khi xử lý ---
     if (!product || product.stock <= 0) {
-        return {
-            success: false,
-            message: 'Sản phẩm đã hết hàng', // Không chứa chữ "thành công" -> Hiện thẻ đỏ
-            cartTotal: mockCart.total
-        };
+        return { success: false, message: 'Sản phẩm đã hết hàng' };
     }
 
-    // 1. Kiểm tra sản phẩm đã tồn tại trong giỏ hàng chưa
     const existingItem = mockCart.items.find(item => item.productId === product.productId);
 
     if (existingItem) {
-        // Kiểm tra xem nếu tăng thêm 1 có vượt quá tồn kho không (Nâng cao)
         if (existingItem.quantity + 1 > product.stock) {
-            return {
-                success: false,
-                message: 'Số lượng yêu cầu vượt quá tồn kho hiện có',
-                cartTotal: mockCart.total
-            };
+            return { success: false, message: 'Vượt quá tồn kho' };
         }
         existingItem.quantity += 1;
     } else {
-        mockCart.items.push({
-            productId: product.productId,
-            productName: product.productName,
-            price: product.price,
-            quantity: 1
-        });
+        mockCart.items.push({ ...product, quantity: 1 });
     }
 
-    // 2. Tính toán lại tổng tiền
-    mockCart.total = mockCart.items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+    // Cập nhật tổng tiền bằng hàm utils để tăng coverage cho cả 2 nơi
+    mockCart.total = calculateCartTotal(mockCart.items.map(i => ({
+        product: { price: i.price },
+        quantity: i.quantity
+    })));
 
-    // 3. Trả về kết quả Thành công
-    return {
-        success: true,
-        message: 'Thêm vào giỏ hàng thành công', // Chứa chữ "thành công" -> Hiện thẻ xanh
-        cartTotal: mockCart.total
-    };
+    return { success: true, message: 'Thêm vào giỏ hàng thành công', cartTotal: mockCart.total };
 };
 
 export const updateQuantity = async (userId, productId, newQuantity) => {

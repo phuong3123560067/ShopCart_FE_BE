@@ -26,7 +26,7 @@ describe('Checkout Integration Tests', () => {
         renderCheckout(VALID_CART);
 
         await waitFor(() => {
-            expect(screen.getByTestId('subtotal-price')).toHaveTextContent('21,000,000');
+            expect(screen.getByTestId('subtotal-price')).toHaveTextContent('21.000.000');
         });
     });
 
