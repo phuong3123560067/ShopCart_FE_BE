@@ -27,7 +27,7 @@ function App() {
   return (
     <Router>
       <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-        <h1>Hệ thống Bán hàng ShopCart</h1>
+        <h1>🛒 Hệ Thống Mua Sắm Online</h1>
         <hr />
         
         <Routes>
@@ -37,7 +37,7 @@ function App() {
           {/* Trang thanh toán riêng biệt */}
           <Route path="/checkout" element={<CheckoutPage />} />
           
-          {/* Trang xác nhận sau khi xong (Câu 6.2.2) */}
+          {/* Trang xác nhận sau khi xong */}
           <Route path="/order-confirmation" element={<SuccessPage />} />
         </Routes>
       </div>

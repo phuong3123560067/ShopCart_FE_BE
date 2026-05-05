@@ -1,7 +1,7 @@
 import { VALID_CART, EMPTY_CART } from "../tests/mockData/cart.mock";
 
-let mockCart = { ... VALID_CART};
-// let mockCart = { ... EMPTY_CART};
+// let mockCart = { ... VALID_CART};
+let mockCart = { ... EMPTY_CART};
 
 export const getCart = async (userId) => {
     // Trả về một bản sao mới nhất của giỏ hàng
