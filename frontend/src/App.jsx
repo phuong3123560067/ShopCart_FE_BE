@@ -1,28 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import CartComponent from "./components/CartComponent";
 import CheckoutPage from "./components/CheckoutPage";
+import SuccessPage from "./components/SuccessPage";
 import "./App.css";
 
 function App() {
-  const SuccessPage = () => {
-    const location = useLocation();
-    const orderId = location.state?.orderId; // Lấy mã đơn hàng từ state
-
-    return (
-      <div style={{ textAlign: 'center', padding: '40px', border: '2px solid #28a745', borderRadius: '10px' }}>
-        <h2 style={{ color: 'green' }}> ĐẶT HÀNG THÀNH CÔNG!</h2>
-        
-        {/* Hiện mã cho người dùng thấy */}
-        <div style={{ backgroundColor: '#f4f4f4', padding: '10px', display: 'inline-block', borderRadius: '5px' }}>
-          Mã đơn hàng của bạn: <strong>{orderId || "Đang xử lý..."}</strong>
-        </div>
-
-        <div style={{ marginTop: '20px' }}>
-          <button onClick={() => window.location.href = '/'}>Tiếp tục mua sắm</button>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <Router>
