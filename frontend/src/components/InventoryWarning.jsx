@@ -5,7 +5,7 @@ export const InventoryWarning = ({ items }) => {
 
   return (
     <div
-      data-testid="inventory-error"
+      data-testid="inventory-warning"
       style={{ 
         color: '#721c24', 
         backgroundColor: '#f8d7da', 

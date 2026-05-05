@@ -10,7 +10,6 @@ const CheckoutPage = () => {
   const [discountValue, setDiscountValue] = useState(0);
   const [message, setMessage] = useState(""); // Thông báo cho mã giảm giá
   
-  // Sử dụng phí ship mặc định từ Mock Data
   const shippingFee = SHIPPING.DEFAULT; 
 
   const location = useLocation();
@@ -71,6 +70,8 @@ const CheckoutPage = () => {
   return (
     <div className="checkout-container" style={{ maxWidth: '600px', margin: '20px auto', padding: '20px', border: '1px solid #eee', borderRadius: '12px', backgroundColor: '#fff', fontFamily: 'Arial, sans-serif' }}>
       <h1 style={{ textAlign: 'center', color: '#333' }}>Xác Nhận Đơn Hàng</h1>
+
+      {cart && <InventoryWarning items={cart.items} />}
 
       <div style={{ margin: '20px 0', backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '8px' }}>
         <h3>Danh sách sản phẩm:</h3>
