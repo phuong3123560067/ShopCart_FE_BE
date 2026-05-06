@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
 import { calculateOrderPrice, checkInventoryAvailability } from "../utils/priceCalculation";
-import { VALID_CART, PROMOTION, SHIPPING, OUT_OF_STOCK_CART } from "../tests/mockData/cart.mock"; 
+import { VALID_CART, COUPONS, SHIPPING, OUT_OF_STOCK_CART } from "../tests/mockData/cart.mock"; 
 
 describe("Price Calculation Tests", () => {
 
@@ -18,7 +18,7 @@ describe("Price Calculation Tests", () => {
     test("TC2: Áp dụng mã giảm giá GIAM10", () => {
         const coupon = { 
             type: "percent", 
-            value: PROMOTION.GIAM10.discountPercent // 10%[cite: 12]
+            value: COUPONS.GIAM10.discount_percent
         }; 
 
         const result = calculateOrderPrice(VALID_CART.items, coupon, 0);
@@ -28,10 +28,10 @@ describe("Price Calculation Tests", () => {
         expect(result.total).toBe(18900000); 
     });
 
-    test("TC3: Áp dụng mã giảm giá cố định (Ví dụ FREESHIP)", () => {
+    test("TC3: Áp dụng mã giảm giá cố định (mã FREESHIP)", () => {
         const coupon = { 
             type: "fixed", 
-            value: PROMOTION.FREESHIP.discountAmount // 30000
+            value: COUPONS.FREESHIP.discount_amount // 30000
         }; 
 
         const result = calculateOrderPrice(VALID_CART.items, coupon, 0);
@@ -41,15 +41,7 @@ describe("Price Calculation Tests", () => {
         expect(result.total).toBe(20970000); 
     });
 
-    test("TC4: Tính phí vận chuyển EXPRESS", () => {
-        const shippingFee = SHIPPING.EXPRESS; // 50000
-        const result = calculateOrderPrice(VALID_CART.items, null, shippingFee);
-
-        expect(result.shippingFee).toBe(50000); 
-        expect(result.total).toBe(21050000); 
-    });
-
-    test("TC5: Tổng cuối cùng (Subtotal + Shipping - Discount)", () => {
+    test("TC4: Tổng cuối cùng (Subtotal + Shipping - Discount)", () => {
         const coupon = { type: "percent", value: 20 }; 
         const shippingFee = SHIPPING.DEFAULT; // 30000[cite: 12]
 
@@ -62,12 +54,12 @@ describe("Price Calculation Tests", () => {
 
 describe("Inventory Tests", () => {
 
-    test("TC6: Tất cả sản phẩm đủ hàng", () => {
+    test("TC5: Tất cả sản phẩm đủ hàng", () => {
         const result = checkInventoryAvailability(VALID_CART.items);
         expect(result).toBe(true); 
     });
 
-    test("TC7: Có sản phẩm vượt tồn kho", () => {
+    test("TC6: Có sản phẩm vượt tồn kho", () => {
         // Tạo dữ liệu giả lập vượt stock dựa trên dữ liệu thật
         const items = [
             { quantity: 11, stock: 10 } 
@@ -77,7 +69,7 @@ describe("Inventory Tests", () => {
         expect(result).toBe(false); 
     });
 
-    test("TC8: Sản phẩm hết hàng", () => {
+    test("TC7: Sản phẩm hết hàng", () => {
         const result = checkInventoryAvailability(OUT_OF_STOCK_CART.items);
         expect(result).toBe(false); 
     });

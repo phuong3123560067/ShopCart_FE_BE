@@ -1,18 +1,22 @@
 import { calculateCartTotal } from "../utils/cartValidation";
-import { EMPTY_CART } from "../tests/mockData/cart.mock";
+import { EMPTY_CART, SHIPPING } from "../tests/mockData/cart.mock";
 
-let mockCart = { ...EMPTY_CART }; 
+// Khởi tạo bản sao sạch để tránh rò rỉ dữ liệu
+let mockCart = JSON.parse(JSON.stringify(EMPTY_CART)); 
 
-export const getCart = async (userId) => {
+export const getCart = async (user_id) => {
+    if (mockCart.user_id !== user_id) {
+        await clearCart(user_id);
+    }
     return { ...mockCart };
 };
 
-export const addToCart = async (userId, product) => {
+export const addToCart = async (user_id, product) => {
     if (!product || product.stock <= 0) {
         return { success: false, message: 'Sản phẩm đã hết hàng' };
     }
 
-    const existingItem = mockCart.items.find(item => item.productId === product.productId);
+    const existingItem = mockCart.items.find(item => item.product_id === product.product_id);
 
     if (existingItem) {
         if (existingItem.quantity + 1 > product.stock) {
@@ -23,40 +27,47 @@ export const addToCart = async (userId, product) => {
         mockCart.items.push({ ...product, quantity: 1 });
     }
 
-    // Cập nhật tổng tiền bằng hàm utils để tăng coverage cho cả 2 nơi
-    mockCart.total = calculateCartTotal(mockCart.items.map(i => ({
+    // Tính tổng tiền sản phẩm
+    mockCart.total_price = calculateCartTotal(mockCart.items.map(i => ({
         product: { price: i.price },
         quantity: i.quantity
     })));
 
-    return { success: true, message: 'Thêm vào giỏ hàng thành công', cartTotal: mockCart.total };
+    return { success: true, message: 'Thêm vào giỏ hàng thành công', cartTotal: mockCart.total_price };
 };
 
-export const updateQuantity = async (userId, productId, newQuantity) => {
-    // 1. Tìm vị trí sản phẩm trong giỏ hàng
-    const itemIndex = mockCart.items.findIndex(i => i.productId === productId);
+export const updateQuantity = async (user_id, product_id, newQuantity) => {
+    const itemIndex = mockCart.items.findIndex(i => i.product_id === product_id);
     
     if (itemIndex !== -1) {
         if (newQuantity <= 0) {
-            // NẾU SỐ LƯỢNG <= 0: Xóa sản phẩm khỏi danh sách
             mockCart.items.splice(itemIndex, 1);
         } else {
-            // NẾU SỐ LƯỢNG > 0: Cập nhật số lượng mới
+            // Kiểm tra tồn kho dùng key .stock
+            if (newQuantity > mockCart.items[itemIndex].stock) {
+                return { success: false, message: 'Vượt quá tồn kho' };
+            }
             mockCart.items[itemIndex].quantity = newQuantity;
         }
 
-        // 2. Cập nhật lại tổng tiền cho toàn bộ giỏ[cite: 3]
-        mockCart.total = mockCart.items.reduce((sum, i) => sum + (i.quantity * i.price), 0);
+        // Tính toán lại total
+        const subTotal = mockCart.items.reduce((sum, i) => sum + (i.quantity * i.price), 0);
+        
+        // Nếu giỏ hàng trống, total PHẢI là 0
+        mockCart.total_price = subTotal > 0 ? subTotal + SHIPPING.DEFAULT : 0;
     }
     
     return { 
         success: true, 
         message: 'Cập nhật số lượng thành công', 
-        cartTotal: mockCart.total 
+        newTotal: mockCart.total_price 
     };
 };
 
-export const checkout = async (userId) => {
-    alert("Hệ thống: Đang xử lý đơn hàng cho người dùng " + userId);
+export const clearCart = async (user_id) => {
+    // Reset về object EMPTY_CART có sẵn total = 0
+    mockCart = JSON.parse(JSON.stringify(EMPTY_CART)); 
+    mockCart.user_id = user_id; // Dùng user_id
+
     return { success: true };
 };

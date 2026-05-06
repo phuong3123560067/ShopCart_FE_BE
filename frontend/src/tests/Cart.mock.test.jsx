@@ -19,17 +19,16 @@ describe('Cart Mock Tests', () => {
         cartService.addToCart.mockResolvedValue({
             success: true,
             message: 'Thêm vào giỏ hàng thành công',
-            cartTotal: VALID_CART.total
+            cartTotal: VALID_CART.total_price
         });
 
         cartService.getCart.mockResolvedValue(VALID_CART);
 
         render(
-            <BrowserRouter><CartComponent userId="user01" /></BrowserRouter>
+            <BrowserRouter><CartComponent user_id="user01" /></BrowserRouter>
         );
 
-        // 2. Tìm nút bấm theo ID sản phẩm có trong PRODUCT_LIST (P999 - iPhone)
-        const addBtn = await screen.findByTestId('add-P999-btn');
+        const addBtn = await screen.findByTestId('add-999-btn');
         fireEvent.click(addBtn);
 
         await waitFor(() => {
@@ -37,7 +36,7 @@ describe('Cart Mock Tests', () => {
             expect(cartService.addToCart).toHaveBeenCalledWith(
                 'user01',
                 expect.objectContaining({
-                    productId: 'P999'
+                    product_id: 999
                 })
             );
             
@@ -55,12 +54,12 @@ describe('Cart Mock Tests', () => {
         });
 
         render(
-            <BrowserRouter><CartComponent userId="user01" /></BrowserRouter>
+            <BrowserRouter><CartComponent user_id="user01" /></BrowserRouter>
         );
 
         // 2. Chọn một sản phẩm còn hàng trong danh sách nhưng mock API trả về lỗi (để nút không bị disabled)
-        // Ví dụ dùng P998 (MacBook) có stock: 8
-        const addBtn = await screen.findByTestId('add-P998-btn');
+        // Ví dụ dùng 998 (MacBook) có stock: 8
+        const addBtn = await screen.findByTestId('add-998-btn');
         fireEvent.click(addBtn);
 
         await waitFor(() => {
@@ -68,7 +67,7 @@ describe('Cart Mock Tests', () => {
             expect(cartService.addToCart).toHaveBeenCalledWith(
                 'user01',
                 expect.objectContaining({
-                    productId: 'P998'
+                    product_id: 998
                 })
             );
             

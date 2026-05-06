@@ -4,7 +4,7 @@ export const checkStock = async (items) => {
     
     if (outOfStockItems.length > 0) {
         // Danh sách tên các sản phẩm bị lỗi
-        const errorNames = outOfStockItems.map(item => item.productName).join(", ");
+        const errorNames = outOfStockItems.map(item => item.name).join(", ");
         
         return { 
             available: false, 

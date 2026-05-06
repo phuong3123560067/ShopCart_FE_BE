@@ -3,23 +3,30 @@ import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
     const [formData, setFormData] = useState({
-        fullName: '',
+        full_name: '',
         email: '',
         password: '',
-        confirmPassword: ''
+        confirm_password: ''
     });
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Lưu tạm thông tin vừa gõ vào localStorage để tí nữa Login lấy ra so sánh
-        localStorage.setItem('tempUser', JSON.stringify({
-            id: "new-user-" + Date.now(),
+
+        if (formData.password !== formData.confirm_password) {
+            setError('Mật khẩu xác nhận không khớp!');
+            return;
+        }
+
+        localStorage.setItem('temp_user', JSON.stringify({
+            user_id: Date.now(), // ID dạng số (serial)
             email: formData.email,
             password: formData.password,
-            fullName: formData.fullName
+            full_name: formData.full_name,
+            role_id: 1 // Mặc định là customer
         }));
+
         alert('Đăng ký thành công! Mời bạn đăng nhập lại.');
         navigate('/'); 
     };
@@ -72,7 +79,7 @@ const Register = () => {
                     <label style={labelStyle}>Họ và tên</label>
                     <input 
                         type="text" placeholder="Nguyễn Văn A..." style={inputStyle}
-                        onChange={(e) => setFormData({...formData, fullName: e.target.value})} required 
+                        onChange={(e) => setFormData({...formData, full_name: e.target.value})} required 
                     />
 
                     <label style={labelStyle}>Email</label>
@@ -90,11 +97,11 @@ const Register = () => {
                     <label style={labelStyle}>Xác nhận mật khẩu</label>
                     <input 
                         type="password" placeholder="••••••••" style={inputStyle}
-                        onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})} required 
+                        onChange={(e) => setFormData({...formData, confirm_password: e.target.value})} required 
                     />
 
                     <button type="submit" style={{
-                        width: '100%', padding: '14px', backgroundColor: '#2d3748', // Màu tối hơn để phân biệt với Login
+                        width: '100%', padding: '14px', backgroundColor: '#2d3748',
                         color: 'white', border: 'none', borderRadius: '8px',
                         fontWeight: 'bold', fontSize: '16px', cursor: 'pointer',
                         boxShadow: '0 4px 12px rgba(0,0,0,0.1)', marginTop: '10px'

@@ -31,7 +31,7 @@ test.describe('Purchase E2E Tests - ShopCart System', () => {
         await checkoutPage.applyDiscount('GIAM10');
 
         // Kiểm tra số tiền giảm (10% của 21.100.000 = 2.110.000)
-        await expect(checkoutPage.discountAmount).toContainText('2,110,000');
+        await expect(checkoutPage.discount_amount).toContainText('2,110,000');
         
         // Kiểm tra Tổng thanh toán cuối cùng (21.100.000 - 2.110.000 = 19.020.000)
         await expect(checkoutPage.finalTotal).toContainText('19,020,000');

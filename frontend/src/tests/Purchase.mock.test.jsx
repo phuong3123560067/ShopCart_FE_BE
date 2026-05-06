@@ -19,24 +19,24 @@ describe('Purchase Mock Tests', () => {
         vi.mocked(inventoryService.checkStock).mockResolvedValue({ available: true });
 
         vi.mocked(orderService.createOrder).mockResolvedValue({
-            orderId: 'ORD-001',
+            order_id: 'ORD-001',
             status: 'PENDING'
         });
 
         const items = [{ 
-            productId: PRODUCT_AVAILABLE.productId, // 'P999'
+            product_id: PRODUCT_AVAILABLE.product_id, // 'P999'
             quantity: 1 
         }];
         
         const stockStatus = await inventoryService.checkStock(items);
         if (stockStatus.available) {
-            await orderService.createOrder({ items, userId: 'user01' });
+            await orderService.createOrder({ items, user_id: 'user01' });
         }
 
         // Verify: Kiểm tra xem đã gọi đúng mã sản phẩm P999 chưa
         expect(inventoryService.checkStock).toHaveBeenCalledWith(
             expect.arrayContaining([
-                expect.objectContaining({ productId: PRODUCT_AVAILABLE.productId })
+                expect.objectContaining({ product_id: PRODUCT_AVAILABLE.product_id })
             ])
         );
         expect(orderService.createOrder).toHaveBeenCalledTimes(1);
@@ -47,20 +47,20 @@ describe('Purchase Mock Tests', () => {
         vi.mocked(inventoryService.checkStock).mockResolvedValue({ available: false });
 
         const items = [{ 
-            productId: PRODUCT_OUT_OF_STOCK.productId, // 'P000'
+            product_id: PRODUCT_OUT_OF_STOCK.product_id, // 'P000'
             quantity: 1 
         }];
         
         const stockStatus = await inventoryService.checkStock(items);
         
         if (stockStatus.available) {
-            await orderService.createOrder({ items, userId: 'user01' });
+            await orderService.createOrder({ items, user_id: 'user01' });
         }
 
         // Verify: Đảm bảo đã check sản phẩm P000 và KHÔNG tạo đơn hàng
         expect(inventoryService.checkStock).toHaveBeenCalledWith(
             expect.arrayContaining([
-                expect.objectContaining({ productId: PRODUCT_OUT_OF_STOCK.productId })
+                expect.objectContaining({ product_id: PRODUCT_OUT_OF_STOCK.product_id })
             ])
         );
         expect(orderService.createOrder).not.toHaveBeenCalled();

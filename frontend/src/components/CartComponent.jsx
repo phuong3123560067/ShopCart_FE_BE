@@ -6,9 +6,18 @@ import { useNavigate } from "react-router-dom";//chuyển hướng sau khi đặ
 import { PRODUCT_LIST } from "../tests/mockData/cart.mock";
 
 
-function CartComponent({ userId: propUserId }) {
+function CartComponent({ user_id: propUser_id }) {
     const savedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-    const userId = propUserId || (savedUser ? savedUser.id : "user01");
+    const user_id = propUser_id || savedUser?.id; 
+
+    useEffect(() => {
+        if (user_id) {
+            fetchCartData();
+        } else {
+            // Nếu không có user_id (chưa đăng nhập), ép về trang login
+            navigate('/');
+        }
+    }, [user_id]);
 
     const [cart, setCart] = useState(null);
     const [error, setError] = useState(null);
@@ -18,11 +27,11 @@ function CartComponent({ userId: propUserId }) {
 
     const fetchCartData = async () => {
         try {
-            const data = await cartService.getCart(userId);
+            const data = await cartService.getCart(user_id);
             setCart({ ...data });
             setError(null);
         } catch (err) {
-            setError("Error loading cart");
+            setError("Lỗi tải giỏ hàng");
         } finally {
             setLoading(false);
         }
@@ -30,10 +39,10 @@ function CartComponent({ userId: propUserId }) {
 
     useEffect(() => {
         fetchCartData();
-    }, [userId]);
+    }, [user_id]);
 
     const handleAddToCart = async (product) => {
-        const response = await cartService.addToCart(userId, product);
+        const response = await cartService.addToCart(user_id, product);
         
         if (response.success) {
             setMessage(response.message);
@@ -43,13 +52,13 @@ function CartComponent({ userId: propUserId }) {
         }
     };
 
-    const handleUpdateQuantity = async (productId, change) => {
+    const handleUpdateQuantity = async (product_id, change) => {
         // 1. Tìm item hiện tại trong giỏ hàng để biết số lượng đang có
-        const item = cart.items.find(i => i.productId === productId);
+        const item = cart.items.find(i => i.product_id === product_id);
         if (!item) return;
 
         // 2. Tìm thông tin gốc từ PRODUCT_LIST để lấy 'stock' (hàng tồn kho)
-        const originalProduct = PRODUCT_LIST.find(p => p.productId === productId);
+        const originalProduct = PRODUCT_LIST.find(p => p.product_id === product_id);
         const maxStock = originalProduct ? originalProduct.stock : 0;
 
         const newQty = item.quantity + change;
@@ -60,13 +69,12 @@ function CartComponent({ userId: propUserId }) {
         // 4. KIỂM TRA QUÁ TỒN KHO TẠI ĐÂY
         if (newQty > maxStock) {
             // Nếu vượt quá stock, hiển thị thông báo lỗi ngay
-            setMessage(`Rất tiếc, sản phẩm ${item.productName} chỉ còn ${maxStock} sản phẩm trong kho!`);
+            setMessage(`Rất tiếc, sản phẩm ${item.name} chỉ còn ${maxStock} sản phẩm trong kho!`);
             return; // Dừng hàm, không gọi API update nữa
         }
 
         try {
-            await cartService.updateQuantity(userId, productId, newQty);
-            
+            await cartService.updateQuantity(user_id, product_id, newQty);
             await fetchCartData(); 
             setMessage(newQty === 0 ? "Đã xóa sản phẩm khỏi giỏ hàng" : ""); 
         } catch (error) {
@@ -117,7 +125,7 @@ function CartComponent({ userId: propUserId }) {
                 marginBottom: '40px' 
             }}>
                 {PRODUCT_LIST.map((product) => (
-                    <div key={product.productId} style={{ 
+                    <div key={product.product_id} style={{ 
                         border: '1px solid #f0f0f0', 
                         padding: '15px', 
                         borderRadius: '12px', 
@@ -135,7 +143,7 @@ function CartComponent({ userId: propUserId }) {
                         e.currentTarget.style.shadow = 'none';
                     }}>
                         <div style={{ backgroundColor: '#f8f9fa', borderRadius: '8px', padding: '10px', marginBottom: '12px' }}>
-                            <img src={product.img} alt={product.name} style={{ width: '100%', height: '120px', objectFit: 'contain' }} />
+                            <image_url src={product.image_url} alt={product.name} style={{ width: '100%', height: '120px', objectFit: 'contain' }} />
                         </div>
                         <h4 style={{ margin: '10px 0 5px', fontSize: '16px', color: '#333' }}>{product.name}</h4>
                         <p style={{ color: '#e44d26', fontWeight: 'bold', fontSize: '18px', margin: '5px 0' }}>
@@ -143,7 +151,7 @@ function CartComponent({ userId: propUserId }) {
                         </p>
                         
                         <button 
-                            data-testid={`add-${product.productId}-btn`}
+                            data-testid={`add-${product.product_id}-btn`}
                             onClick={() => handleAddToCart(product)}
                             style={{ 
                                 width: '100%', 
@@ -193,7 +201,7 @@ function CartComponent({ userId: propUserId }) {
                 border: '1px solid #edf2f7'
             }}>
                 <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#4a5568', fontSize: '20px' }}>
-                    🛍️ Giỏ hàng của {JSON.parse(localStorage.getItem('currentUser'))?.fullName || "bạn"}
+                    🛍️ Giỏ hàng của {JSON.parse(localStorage.getItem('currentUser'))?.full_name || "bạn"}
                 </h3>
                 
                 {(!cart || cart.items.length === 0) ? (
@@ -206,8 +214,8 @@ function CartComponent({ userId: propUserId }) {
                         <div style={{ maxHeight: '300px', overflowY: 'auto', paddingRight: '10px' }}>
                             {cart.items.map((item) => (
                                 <div 
-                                    key={item.productId} 
-                                    data-testid={`cart-item-${item.productId}`} 
+                                    key={item.product_id} 
+                                    data-testid={`cart-item-${item.product_id}`} 
                                     style={{ 
                                         display: 'flex', 
                                         justifyContent: 'space-between', 
@@ -217,23 +225,23 @@ function CartComponent({ userId: propUserId }) {
                                     }}
                                 >
                                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                        <span style={{ fontWeight: '600', color: '#2d3748' }}>{item.productName}</span>
+                                        <span style={{ fontWeight: '600', color: '#2d3748' }}>{item.name}</span>
                                         <span style={{ fontSize: '14px', color: '#718096' }}>Đơn giá: {item.price?.toLocaleString()}đ</span>
                                     </div>
                                     
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
                                             <button 
-                                                data-testid={`decrease-btn-${item.productId}`} 
-                                                onClick={() => handleUpdateQuantity(item.productId, -1)}
+                                                data-testid={`decrease-btn-${item.product_id}`} 
+                                                onClick={() => handleUpdateQuantity(item.product_id, -1)}
                                                 style={{ padding: '5px 12px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '18px' }}
                                             >-</button>
-                                            <span data-testid={`quantity-value-${item.productId}`} style={{ padding: '0 10px', fontWeight: 'bold', minWidth: '20px', textAlign: 'center' }}>
+                                            <span data-testid={`quantity-value-${item.product_id}`} style={{ padding: '0 10px', fontWeight: 'bold', minWidth: '20px', textAlign: 'center' }}>
                                                 {item.quantity}
                                             </span>
                                             <button 
-                                                data-testid={`increase-qty-${item.productId}`}
-                                                onClick={() => handleUpdateQuantity(item.productId, 1)}
+                                                data-testid={`increase-qty-${item.product_id}`}
+                                                onClick={() => handleUpdateQuantity(item.product_id, 1)}
                                                 style={{ padding: '5px 12px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '18px' }}
                                             >+</button>
                                         </div>

@@ -1,11 +1,11 @@
 import { describe, test, expect } from "vitest";
 import { validateCartItem, calculateCartTotal } from "../utils/cartValidation";
-import { VALID_CART, EMPTY_CART, PRODUCT_AVAILABLE, PRODUCT_OUT_OF_STOCK, PROMOTION } from "../tests/mockData/cart.mock"; 
+import { VALID_CART, EMPTY_CART, PRODUCT_AVAILABLE, PRODUCT_OUT_OF_STOCK, COUPONS } from "../tests/mockData/cart.mock"; 
 
 describe('Cart Validation Test', () => {
     test('TC1: số lượng hợp lệ - sử dụng sản phẩm còn hàng', () => {
         const result = validateCartItem({ 
-            productID: PRODUCT_AVAILABLE.productId, 
+            product_id: PRODUCT_AVAILABLE.product_id, 
             quantity: 5, 
             stock: PRODUCT_AVAILABLE.stock 
         });
@@ -14,20 +14,20 @@ describe('Cart Validation Test', () => {
 
     test('TC2: số lượng không được để trống - trả về lỗi', () => {
         expect(() =>
-            validateCartItem({ productID: PRODUCT_AVAILABLE.productId, quantity: null, stock: 10 })
+            validateCartItem({ product_id: PRODUCT_AVAILABLE.product_id, quantity: null, stock: 10 })
         ).toThrow("Số lượng không được để trống");
     });
 
     test('TC3: số lượng = 0 - trả về lỗi', () => {
         expect(() =>
-            validateCartItem({ productID: PRODUCT_AVAILABLE.productId, quantity: 0, stock: 10 })
+            validateCartItem({ product_id: PRODUCT_AVAILABLE.product_id, quantity: 0, stock: 10 })
         ).toThrow("Số lượng phải lớn hơn 0");
     });
 
     test('TC5: số lượng vượt quá tồn kho thực tế - trả về lỗi', () => {
         expect(() =>
             validateCartItem({ 
-                productID: PRODUCT_AVAILABLE.productId, 
+                product_id: PRODUCT_AVAILABLE.product_id, 
                 quantity: PRODUCT_AVAILABLE.stock + 1, 
                 stock: PRODUCT_AVAILABLE.stock 
             })
@@ -37,7 +37,7 @@ describe('Cart Validation Test', () => {
     test('TC10: sản phẩm hết hàng - stock = 0', () => {
         expect(() =>
             validateCartItem({ 
-                productID: PRODUCT_OUT_OF_STOCK.productId, 
+                product_id: PRODUCT_OUT_OF_STOCK.product_id, 
                 quantity: 1, 
                 stock: PRODUCT_OUT_OF_STOCK.stock 
             })
@@ -67,10 +67,10 @@ describe('Calculate Cart Total Test', () => {
             quantity: item.quantity
         }));
         
-        const discount = PROMOTION.GIAM10.discountPercent; 
+        const discount = COUPONS.GIAM10.discount_percent; 
         const total = calculateCartTotal(cartForFunction, discount); 
         
-        // 21.000.000 - 10% = 18.900.000[cite: 9]
+        // 21.000.000 - 10% = 18.900.000
         expect(total).toBe(18900000); 
     });
 

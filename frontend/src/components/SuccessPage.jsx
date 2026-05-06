@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 const SuccessPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const orderId = location.state?.orderId;
+    const order_id = location.state?.order_id;
 
     return (
         <div style={{ 
@@ -17,7 +17,6 @@ const SuccessPage = () => {
             boxShadow: '0 15px 35px rgba(0,0,0,0.1)',
             fontFamily: "'Segoe UI', Roboto, sans-serif"
         }}>
-            {/* Icon thành công dạng vòng tròn */}
             <div style={{ 
                 width: '80px', 
                 height: '80px', 
@@ -42,7 +41,7 @@ const SuccessPage = () => {
             </p>
 
             {/* Box mã đơn hàng */}
-            {orderId ? (
+            {order_id ? (
                 <div style={{ 
                     backgroundColor: '#f7fafc', 
                     padding: '20px', 
@@ -54,7 +53,7 @@ const SuccessPage = () => {
                         Mã số đơn hàng của bạn
                     </span>
                     <strong style={{ fontSize: '22px', color: '#2d3748', fontFamily: 'monospace' }}>
-                        {orderId}
+                        {order_id}
                     </strong>
                 </div>
             ) : (
@@ -65,7 +64,7 @@ const SuccessPage = () => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 <button 
-                    onClick={() => navigate('/')} 
+                    onClick={() => navigate('/cart')} 
                     style={{ 
                         padding: '14px', 
                         backgroundColor: '#3182ce', 

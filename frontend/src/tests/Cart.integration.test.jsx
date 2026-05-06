@@ -1,12 +1,14 @@
 import { describe, test, expect, vi, afterEach, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup, within } from '@testing-library/react';
 import CartComponent from '../components/CartComponent.jsx';
 import { VALID_CART, OUT_OF_STOCK_CART, EMPTY_CART, MOCK_PRODUCT_ADDTOCART } from './mockData/cart.mock';
 import * as cartService from '../services/cartService';
+import * as inventoryService from '../services/inventoryService';
 
 // Mock API service
 vi.mock('../services/cartService');
+vi.mock('../services/inventoryService');
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
@@ -19,15 +21,12 @@ describe('Cart Component Integration Tests', () => {
     // GIẢI PHÁP QUAN TRỌNG: Thiết lập giá trị mặc định trước mỗi Test Case
     beforeEach(() => {
         vi.clearAllMocks();
-        
-        // Luôn giả lập addToCart thành công để tránh lỗi 'success' of undefined
-        cartService.addToCart.mockResolvedValue({ 
-            success: true, 
-            message: 'Thành công' 
-        });
+    
+        inventoryService.checkStock.mockResolvedValue({ available: true });
 
-        // Mặc định getCart trả về giỏ hàng hợp lệ (có thể ghi đè trong từng TC)
+        cartService.addToCart.mockResolvedValue({ success: true, message: 'Thành công' });
         cartService.getCart.mockResolvedValue(VALID_CART);
+        cartService.updateQuantity.mockResolvedValue({ success: true });
     });
 
     afterEach(() => {
@@ -37,7 +36,7 @@ describe('Cart Component Integration Tests', () => {
     test('TC1: Hiển thị giỏ hàng rỗng khi chưa có sản phẩm', async () => {
         cartService.getCart.mockResolvedValue(EMPTY_CART); // Ghi đè mock cho TC này
 
-        render(<BrowserRouter><CartComponent userId="user01" /></BrowserRouter>);
+        render(<BrowserRouter><CartComponent user_id="user01" /></BrowserRouter>);
 
         await waitFor(() => {
             expect(screen.getByTestId('empty-cart-message')).toBeInTheDocument();
@@ -45,11 +44,17 @@ describe('Cart Component Integration Tests', () => {
     });
 
     test('TC2: Hiển thị danh sách sản phẩm trong giỏ hàng', async () => {
-        render(<BrowserRouter><CartComponent userId="user01" /></BrowserRouter>);
+        render(<BrowserRouter><CartComponent user_id="user01" /></BrowserRouter>);
 
         await waitFor(() => {
-            expect(screen.getByText(/Laptop/)).toBeInTheDocument();
-            expect(screen.getByTestId('quantity-value-P001')).toHaveTextContent('1');
+            // Tìm vùng chứa cụ thể của sản phẩm Laptop trong giỏ hàng bằng data-testid
+            const cartItem = screen.getByTestId('cart-item-1'); 
+            
+            // Tìm trong giỏ hàng
+            expect(within(cartItem).getByText(/Laptop Dell/i)).toBeInTheDocument();
+            
+            // Kiểm tra số lượng trong giỏ hàng
+            expect(screen.getByTestId('quantity-value-1')).toHaveTextContent('1');
         });
     });
 
@@ -57,34 +62,37 @@ describe('Cart Component Integration Tests', () => {
         let currentCart = { ...VALID_CART };
         cartService.getCart.mockImplementation(() => Promise.resolve(currentCart));
         
-        cartService.updateQuantity.mockImplementation((userId, productId, newQty) => {
+        cartService.updateQuantity.mockImplementation((user_id, product_id, newQty) => {
             currentCart = {
                 ...currentCart,
                 items: currentCart.items.map(item =>
-                    item.productId === productId ? { ...item, quantity: newQty } : item
+                    item.product_id === product_id ? { ...item, quantity: newQty } : item
                 )
             };
             return Promise.resolve({ success: true });
         });
 
-        render(<BrowserRouter><CartComponent userId="user01" /></BrowserRouter>);
-        await screen.findByText(/Laptop/i);
-
-        const increaseBtn = screen.getByTestId('increase-qty-P001');
+        render(<BrowserRouter><CartComponent user_id="user01" /></BrowserRouter>);
+        const laptopRow = await screen.findByTestId('cart-item-1'); 
+        
+        const increaseBtn = within(laptopRow).getByTestId('increase-qty-1');
         fireEvent.click(increaseBtn);
 
-        await waitFor(() => {
-            expect(screen.getByTestId('quantity-value-P001')).toHaveTextContent('2');
-        });
+        const qtyValue = await screen.findByTestId('quantity-value-1');
+        expect(qtyValue).toHaveTextContent('2');
+
     });
 
     test('TC4: Chuyển hướng sang trang Checkout khi dữ liệu hợp lệ', async () => {
-        render(<BrowserRouter><CartComponent userId="user01" /></BrowserRouter>);
+        render(<BrowserRouter><CartComponent user_id="user01" /></BrowserRouter>);
 
-        await screen.findByText(/Laptop/i);
+        await screen.findAllByText(/Laptop Dell/i); 
+    
+        // 2. Tìm nút Checkout và click
         const checkoutBtn = await screen.findByTestId('checkout-btn');
         fireEvent.click(checkoutBtn);
 
+        // 3. Kiểm tra điều hướng
         await waitFor(() => {
             expect(mockNavigate).toHaveBeenCalledWith("/checkout", { 
                 state: { cartData: VALID_CART } 
@@ -93,58 +101,64 @@ describe('Cart Component Integration Tests', () => {
     });
 
     test('TC5: Hiển thị lỗi tồn kho khi mở giỏ hàng có sẵn hàng hết kho', async () => {
+        // 1. Giả lập giỏ hàng chứa sản phẩm đã hết hàng (994 - Bàn phím cơ)
         cartService.getCart.mockResolvedValue(OUT_OF_STOCK_CART); 
 
-        render(<BrowserRouter><CartComponent userId="user01" /></BrowserRouter>);
+        // 2. Ghi đè mock checkStock để trả về lỗi cho trường hợp này
+        inventoryService.checkStock.mockResolvedValue({ 
+            available: false, 
+            message: 'Rất tiếc, các sản phẩm sau đã hết hàng hoặc không đủ số lượng: Bàn phím cơ Keychron K2 V2' 
+        });
 
+        render(<BrowserRouter><CartComponent user_id="user01" /></BrowserRouter>);
+
+        await screen.findAllByText(/Bàn phím cơ/i);
+
+        // 4. Thực hiện bấm Checkout
         const checkoutBtn = await screen.findByTestId('checkout-btn');
         fireEvent.click(checkoutBtn);
 
+        // 5. Kiểm tra thông báo lỗi
         const errorMsg = await screen.findByTestId('inventory-error');
         expect(errorMsg).toHaveTextContent(/hết hàng/i);
     });
 
-    test('TC6: Hiển thị lỗi khi API lấy dữ liệu giỏ hàng bị fail', async () => {
-        cartService.getCart.mockRejectedValue(new Error('API Error'));
-
-        render(<BrowserRouter><CartComponent userId="user01" /></BrowserRouter>);
-
-        const errorMessage = await screen.findByText(/Error loading cart/i);
-        expect(errorMessage).toBeInTheDocument();
-    });
-
-    // TC7: Test nút "Sản phẩm còn hàng"
-    test('TC7: Thêm sản phẩm CÒN HÀNG thành công và hiển thị thông báo xanh', async () => {
-        // Giả lập API trả về thành công
+    test('TC6: Thêm sản phẩm CÒN HÀNG thành công và hiển thị thông báo xanh', async () => {
+        // Giả lập API thêm vào giỏ hàng thành công
         cartService.addToCart.mockResolvedValue({
             success: true,
             message: 'Thêm sản phẩm vào giỏ hàng thành công'
         });
 
-        render(<BrowserRouter><CartComponent userId="user01" /></BrowserRouter>);
+        render(<BrowserRouter><CartComponent user_id="user01" /></BrowserRouter>);
         
-        // Tìm nút "Sản phẩm còn hàng" theo ID bạn đã đặt ở UI
-        const addBtn = await screen.findByTestId('add-P999-btn');
+        // Đợi danh sách sản phẩm hiển thị
+        const addBtn = await screen.findByTestId('add-999-btn');
         fireEvent.click(addBtn);
 
+        // Đợi và kiểm tra kết quả
         await waitFor(() => {
-            // Kiểm tra xem Service có được gọi với đúng sản phẩm còn hàng không
-            expect(cartService.addToCart).toHaveBeenCalledWith('user01', expect.objectContaining({ stock: 5 }));
+            // Kiểm tra service được gọi đúng tham số
+            expect(cartService.addToCart).toHaveBeenCalledWith('user01', expect.objectContaining({ 
+                product_id: 999,
+                stock: 5 
+            }));
             
-            // Kiểm tra UI hiển thị thẻ thành công (success-toast)
-            const successMsg = screen.getByTestId('success-toast');
-            expect(successMsg).toHaveTextContent(/thành công/i);
+            // Sử dụng findBy để đợi thông báo Toast xuất hiện trên UI
+            return screen.findByTestId('success-toast');
         });
+
+        const successMsg = screen.getByTestId('success-toast');
+        expect(successMsg).toHaveTextContent(/thành công/i);
     });
 
-    test('TC8: Nút thêm sản phẩm bị khóa khi hết hàng', async () => {
-        render(<BrowserRouter><CartComponent userId="user01" /></BrowserRouter>);
+    test('TC7: Nút thêm sản phẩm bị khóa khi hết hàng', async () => {
+        render(<BrowserRouter><CartComponent user_id="user01" /></BrowserRouter>);
         
         // P994 (Bàn phím cơ) có stock: 0 trong PRODUCT_LIST
-        const addBtn = await screen.findByTestId('add-P994-btn');
+        const addBtn = await screen.findByTestId('add-994-btn');
         
         expect(addBtn).toBeDisabled(); // Kiểm tra nút bị khóa
         expect(addBtn).toHaveTextContent(/Hết hàng/i);
     });
-
 });

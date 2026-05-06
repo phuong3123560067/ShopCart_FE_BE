@@ -1,17 +1,15 @@
 import { USERS } from '../tests/mockData/cart.mock';
 
 export const login = async (email, password) => {
-    // 1. Lấy danh sách user từ Mock Data
     const { USERS } = await import('../tests/mockData/cart.mock');
-    
-    // 2. Kiểm tra xem có user nào "mới đăng ký" đang nằm trong localStorage không
-    const registeredUser = JSON.parse(localStorage.getItem('tempUser'));
+    const registeredUser = JSON.parse(localStorage.getItem('temp_user'));
 
-    // 3. Tìm kiếm
+    // Tìm user khớp email và password
     const user = USERS.find(u => u.email === email && u.password === password) 
                  || (registeredUser?.email === email && registeredUser?.password === password ? registeredUser : null);
     
     if (user) {
+        // Đảm bảo object lưu xuống có các key như user_id, full_name[cite: 11]
         localStorage.setItem('currentUser', JSON.stringify(user));
         return { success: true, user };
     }

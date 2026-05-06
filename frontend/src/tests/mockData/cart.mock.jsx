@@ -1,139 +1,176 @@
 // Giỏ hàng tiêu chuẩn
 export const VALID_CART = {
+    cart_id: 1,
+    user_id: 1,
     items: [
-        { productId: 'P001', productName: 'Laptop Dell', price: 20000000, quantity: 1 , stock: 10},
-        { productId: 'P002', productName: 'Mouse Logitech', price: 500000, quantity: 2 , stock: 10}
+        { 
+            product_id: 1, 
+            name: 'Laptop Dell', 
+            price: 20000000, 
+            quantity: 1, 
+            stock: 10 
+        },
+        { 
+            product_id: 2, 
+            name: 'Mouse Logitech', 
+            price: 500000, 
+            quantity: 2, 
+            stock: 10 
+        }
     ],
-    userId: 'user_123',
-    total: 21000000
+    total_price: 21000000
 };
 
 // Giỏ hàng trống
 export const EMPTY_CART = {
+    cart_id: 0,
+    user_id: 1,
     items: [],
-    userId: 'user_123',
-    total: 0
+    total_price: 0
 };
 
 export const OUT_OF_STOCK_CART = {
+    cart_id: 2,
+    user_id: 1,
     items: [
-        { productId: 'P000', productName: 'Laptop ASUS', price: 22000000, quantity: 2 , stock: 0},
+        { 
+            product_id: 994, 
+            name: 'Bàn phím cơ Keychron K2 V2', 
+            price: 1850000, 
+            quantity: 1, 
+            stock: 0 // Sản phẩm đã hết hàng trong DB
+        }
     ],
-    userId: 'user_123',
-    total: 0
+    total_price: 0
 };
 
 export const PRODUCT_AVAILABLE = { 
-    productId: 'P999', 
-    productName: 'Sản phẩm còn hàng', 
+    product_id: 999, 
+    name: 'Sản phẩm còn hàng', 
     price: 100000,
-    stock: 10
+    stock: 10,
+    status: 'Active'
 };
 
 export const PRODUCT_OUT_OF_STOCK = { 
-    productId: 'P000', 
-    productName: 'Sản phẩm hết hàng', 
+    product_id: 0, 
+    name: 'Sản phẩm hết hàng', 
     price: 200000,
-    stock: 0
+    stock: 0,
+    status: 'Active'
 };
 
-
-export const PROMOTION = { // app 1 trong 2
-    "GIAM10": { code: "GIAM10", discountPercent: 10, minOrder: 100000 }, // đơn tối thiểu 100k đc áp dụng
-    "FREESHIP": { code: "FREESHIP", discountAmount: 30000, minOrder: 500000 } // // đơn tối thiểu 500k đc áp dụng
+export const COUPONS = {
+    "GIAM10": { 
+        coupon_id: 1,
+        code: "GIAM10", 
+        discount_percent: 10, 
+        min_order_value: 100000 
+    },
+    "FREESHIP": {
+        coupon_id: 2,
+        code: "FREESHIP",
+        discount_amount: 30000,
+        min_order_value: 0
+    }
 };
 
 export const SHIPPING = {
     DEFAULT: 30000, // cơ bản
-    EXPRESS: 50000, // siêu tốc
     FREE_THRESHOLD: 1000000 // Freeship nếu đơn trên 1 triệu
+};
+
+export const ORDER_STATUS = {
+    PENDING: 'Pending',
+    SHIPPING: 'Shipping',
+    COMPLETED: 'Completed',
+    CANCELLED: 'Cancelled'
 };
 
 export const PRODUCT_LIST = [
     { 
-    productId: 'P001', 
-    productName: 'Laptop Dell', 
-    price: 20000000,
-    stock: 10,
-    img: 'https://placeholder.com/laptop-dell-.jpg'
+        product_id: 1,
+        name: 'Laptop Dell',
+        price: 20000000,
+        stock: 10,
+        image_url: 'https://placeholder.com/laptop-dell.jpg'
     },
     { 
-    productId: 'P002', 
-    productName: 'Mouse Logitech', 
-    price: 500000,
-    stock: 10,
-    img: 'https://placeholder.com/mouse-logitech.jpg'
-    },
-
-    { 
-    productId: 'P999', 
-    productName: 'iPhone 15 Pro Max 256GB', 
-    price: 29500000,
-    stock: 5,
-    img: 'https://placeholder.com/iphone-15-pro.jpg'
+        product_id: 2, 
+        name: 'Mouse Logitech', 
+        price: 500000,
+        stock: 10,
+        image_url: 'https://placeholder.com/mouse-logitech.jpg'
     },
     { 
-    productId: 'P998', 
-    productName: 'MacBook Air M2 13" 8GB/256GB', 
-    price: 24990000,
-    stock: 8,
-    img: 'https://placeholder.com/macbook-m2.jpg'
+        product_id: 999, 
+        name: 'iPhone 15 Pro Max 256GB', 
+        price: 29500000,
+        stock: 5,
+        image_url: 'https://placeholder.com/iphone-15-pro.jpg'
     },
     { 
-    productId: 'P997', 
-    productName: 'Tai nghe AirPods Pro Gen 2', 
-    price: 5850000,
-    stock: 15,
-    img: 'https://placeholder.com/airpods-pro.jpg'
+        product_id: 998, 
+        name: 'MacBook Air M2 13" 8GB/256GB', 
+        price: 24990000,
+        stock: 8,
+        image_url: 'https://placeholder.com/macbook-m2.jpg'
     },
     { 
-    productId: 'P996', 
-    pproductName: 'Samsung Galaxy S24 Ultra', 
-    price: 26490000,
-    stock: 3,
-    img: 'https://placeholder.com/s24-ultra.jpg'
+        product_id: 997, 
+        name: 'Tai nghe AirPods Pro Gen 2', 
+        price: 5850000,
+        stock: 15,
+        image_url: 'https://placeholder.com/airpods-pro.jpg'
     },
     { 
-    productId: 'P995', 
-    productName: 'Chuột Logitech MX Master 3S', 
-    price: 2350000,
-    stock: 20,
-    img: 'https://placeholder.com/mx-master-3s.jpg'
+        product_id: 996, 
+        name: 'Samsung Galaxy S24 Ultra', 
+        price: 26490000,
+        stock: 3,
+        image_url: 'https://placeholder.com/s24-ultra.jpg'
     },
     { 
-    productId: 'P994', 
-    productName: 'Bàn phím cơ Keychron K2 V2', 
-    price: 1850000,
-    stock: 0, // Để test trường hợp Hết hàng
-    img: 'https://placeholder.com/keychron-k2.jpg'
+        product_id: 995, 
+        name: 'Chuột Logitech MX Master 3S', 
+        price: 2350000,
+        stock: 20,
+        image_url: 'https://placeholder.com/mx-master-3s.jpg'
     },
     { 
-    productId: 'P993', 
-    productName: 'Màn hình Dell UltraSharp U2723QE', 
-    price: 13500000,
-    stock: 6,
-    img: 'https://placeholder.com/dell-u2723qe.jpg'
+        product_id: 994, 
+        name: 'Bàn phím cơ Keychron K2 V2', 
+        price: 1850000,
+        stock: 0, // Dùng để test case hết hàng
+        image_url: 'https://placeholder.com/keychron-k2.jpg'
     },
     { 
-    productId: 'P992', 
-    productName: 'Sạc dự phòng Anker 20.000mAh', 
-    price: 1200000,
-    stock: 50,
-    img: 'https://placeholder.com/anker-powerbank.jpg'
+        product_id: 993, 
+        name: 'Màn hình Dell UltraSharp U2723QE', 
+        price: 13500000,
+        stock: 6,
+        image_url: 'https://placeholder.com/dell-u2723qe.jpg'
     },
     { 
-    productId: 'P991', 
-    productName: 'iPad Pro M2 11" WiFi 128GB', 
-    price: 20490000,
-    stock: 12,
-    img: 'https://placeholder.com/ipad-pro-m2.jpg'
+        product_id: 992, 
+        name: 'Sạc dự phòng Anker 20.000mAh', 
+        price: 1200000,
+        stock: 50,
+        image_url: 'https://placeholder.com/anker-powerbank.jpg'
     },
     { 
-    productId: 'P990', 
-    productName: 'Đồng hồ Apple Watch Series 9', 
-    price: 9250000,
-    stock: 7,
-    img: 'https://placeholder.com/apple-watch-s9.jpg'
+        product_id: 991, 
+        name: 'iPad Pro M2 11" WiFi 128GB', 
+        price: 20490000,
+        stock: 12,
+        image_url: 'https://placeholder.com/ipad-pro-m2.jpg'
+    },
+    { 
+        product_id: 990, 
+        name: 'Đồng hồ Apple Watch Series 9', 
+        price: 9250000,
+        stock: 7,
+        image_url: 'https://placeholder.com/apple-watch-s9.jpg'
     }
 ];
 
@@ -142,14 +179,38 @@ export const USERS = [
         id: "user01",
         email: "test@gmail.com",
         password: "123",
-        fullName: "Người Dùng Thử",
+        full_name: "Người Dùng Thử",
         role: "customer"
     },
     {
         id: "user02",
         email: "admin@gmail.com",
         password: "admin",
-        fullName: "Quản Trị Viên",
+        full_name: "Quản Trị Viên",
         role: "admin"
+    }
+];
+
+export const ORDERS = [
+    { 
+        order_id: 101,          
+        user_id: 1,             
+        total_amount: 21000000,
+        status: 'SUCCESS',      
+        message: 'Thanh toán thành công qua thẻ tín dụng',
+        created_at: '2026-05-01 10:00:00',
+        items: [
+            { product_id: 1, quantity: 1, price: 20000000 },
+            { product_id: 2, quantity: 2, price: 500000 }
+        ]
+    },
+    { 
+        order_id: 102, 
+        user_id: 2,             // Dùng để test luồng thất bại
+        total_amount: 0, 
+        status: 'FAILED',       // Trạng thái Cancelled/Failed để kiểm soát luồng
+        message: 'Giao dịch bị từ chối: Số dư tài khoản không đủ',
+        created_at: '2026-05-02 14:30:00',
+        items: []
     }
 ];

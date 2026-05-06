@@ -1,4 +1,4 @@
-export function validateCartItem({productID, quantity, stock}) {
+export function validateCartItem({product_id, quantity, stock}) {
     if (quantity === null || quantity === undefined) {
         throw new Error("Số lượng không được để trống");
     }

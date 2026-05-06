@@ -20,8 +20,8 @@ export class CartPage {
   }
 
   // Lấy dòng sản phẩm cụ thể theo ID
-  getProductRow(productId: string) {
-    return this.page.locator(`[data-testid="cart-item-${productId}"]`);
+  getProductRow(product_id: string) {
+    return this.page.locator(`[data-testid="cart-item-${product_id}"]`);
   }
 
   async addAvailableProduct() {
@@ -32,14 +32,14 @@ export class CartPage {
     await this.addOutOfStockBtn.click();
   }
 
-  async increaseQty(productId: string) {
-    const row = this.getProductRow(productId);
-    await row.locator(`[data-testid="increase-qty-${productId}"]`).click();
+  async increaseQty(product_id: string) {
+    const row = this.getProductRow(product_id);
+    await row.locator(`[data-testid="increase-qty-${product_id}"]`).click();
   }
 
-  async decreaseQty(productId: string) {
-    const row = this.getProductRow(productId);
-    await row.locator(`[data-testid="decrease-btn-${productId}"]`).click();
+  async decreaseQty(product_id: string) {
+    const row = this.getProductRow(product_id);
+    await row.locator(`[data-testid="decrease-btn-${product_id}"]`).click();
   }
 
   async goToCheckout() {

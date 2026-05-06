@@ -20,7 +20,7 @@ function App() {
 
           <Route path="/register" element={<Register />} />
           
-          {/* 2. Trang giỏ hàng - sử dụng userId động từ login (tạm thời để user01) */}
+          {/* 2. Trang giỏ hàng - sử dụng user_id động từ login (tạm thời để user01) */}
           <Route path="/cart" element={<CartComponent />} />
           
           {/* 3. Trang thanh toán */}
