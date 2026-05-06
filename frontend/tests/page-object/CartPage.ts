@@ -2,45 +2,58 @@ import { Locator, Page } from '@playwright/test';
 
 export class CartPage {
   readonly page: Page;
-  readonly addAvailableBtn: Locator;
-  readonly addOutOfStockBtn: Locator;
-  readonly checkoutBtn: Locator;
+
+  // Các Locators cho Login
+  readonly emailInput: Locator;
+  readonly passwordInput: Locator;
+  readonly loginBtn: Locator;
+
+  // Các Locators cho Cart
   readonly successToast: Locator;
   readonly inventoryError: Locator;
   readonly totalPrice: Locator;
+  readonly checkoutBtn: Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.addAvailableBtn = page.locator('[data-testid="add-available-btn"]');
-    this.addOutOfStockBtn = page.locator('[data-testid="add-out-of-stock-btn"]');
-    this.checkoutBtn = page.locator('[data-testid="checkout-btn"]');
+
+    // Khởi tạo locator cho trang Login
+    this.emailInput = page.locator('input[type="email"]');
+    this.passwordInput = page.locator('input[type="password"]');
+    this.loginBtn = page.locator('button[type="submit"]');
+
+    // Khởi tạo locator cho trang Cart
     this.successToast = page.locator('[data-testid="success-toast"]');
     this.inventoryError = page.locator('[data-testid="inventory-error"]');
     this.totalPrice = page.locator('[data-testid="total-price"]');
+    this.checkoutBtn = page.locator('[data-testid="checkout-btn"]');
   }
 
-  // Lấy dòng sản phẩm cụ thể theo ID
-  getProductRow(product_id: string) {
+  // Phương thức đăng nhập đồng nhất
+  async login(email: string, pass: string) {
+    await this.emailInput.fill(email);
+    await this.passwordInput.fill(pass);
+    await this.loginBtn.click();
+    // Đợi đến khi chuyển hướng sang trang cart thành công
+    await this.page.waitForURL('**/cart', { timeout: 10000 });
+  }
+  // Locator linh động cho từng sản phẩm trong danh sách bán
+  getAddBtn(product_id: string | number) {
+    return this.page.locator(`[data-testid="add-${product_id}-btn"]`);
+  }
+
+  // Locator cho sản phẩm trong giỏ hàng
+  getCartItem(product_id: string | number) {
     return this.page.locator(`[data-testid="cart-item-${product_id}"]`);
   }
 
-  async addAvailableProduct() {
-    await this.addAvailableBtn.click();
+  getQtyValue(product_id: string | number) {
+    return this.page.locator(`[data-testid="quantity-value-${product_id}"]`);
   }
 
-  async addOutOfStockProduct() {
-    await this.addOutOfStockBtn.click();
-  }
-
-  async increaseQty(product_id: string) {
-    const row = this.getProductRow(product_id);
-    await row.locator(`[data-testid="increase-qty-${product_id}"]`).click();
-  }
-
-  async decreaseQty(product_id: string) {
-    const row = this.getProductRow(product_id);
-    await row.locator(`[data-testid="decrease-btn-${product_id}"]`).click();
-  }
+  getIncreaseBtn(product_id: string | number) {
+    return this.page.locator(`[data-testid="increase-qty-${product_id}"]`);
+  }    
 
   async goToCheckout() {
     await this.checkoutBtn.click();

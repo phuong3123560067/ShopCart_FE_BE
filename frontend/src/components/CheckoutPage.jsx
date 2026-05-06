@@ -20,28 +20,28 @@ const CheckoutPage = () => {
     // Tính tạm tính (Subtotal)
     const subTotal = cart?.items.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0;
 
-    // Hàm áp dụng mã giảm giá sử dụng logic Mock[cite: 3]
+    // Hàm áp dụng mã giảm giá sử dụng logic Mock
     const applyDiscount = () => {
         const promo = COUPONS[discountCode.toUpperCase()];
 
         if (!promo) {
-        setMessage("Mã giảm giá không hợp lệ!");
-        setDiscountValue(0);
-        return;
+            setMessage("Mã giảm giá không hợp lệ!");
+            setDiscountValue(0);
+            return;
         }
 
-        // Kiểm tra điều kiện đơn hàng tối thiểu (minOrder)[cite: 3]
-        if (subTotal < promo.minOrder) {
-        setMessage(`Đơn hàng phải từ ${promo.minOrder.toLocaleString()}đ để dùng mã này`);
-        setDiscountValue(0);
-        return;
+        // Kiểm tra điều kiện đơn hàng tối thiểu (min_order_value)
+        if (subTotal < promo.min_order_value) {
+            setMessage(`Đơn hàng phải từ ${promo.min_order_value.toLocaleString()}đ để dùng mã này`);
+            setDiscountValue(0);
+            return;
         }
 
         // Tính toán giá trị giảm dựa trên loại mã
         if (promo.discount_percent) {
-        setDiscountValue(subTotal * (promo.discount_percent / 100));
+            setDiscountValue(subTotal * (promo.discount_percent / 100));
         } else if (promo.discount_amount) {
-        setDiscountValue(promo.discount_amount);
+            setDiscountValue(promo.discount_amount);
         }
 
         setMessage(`Đã áp dụng mã ${promo.code} thành công!`);
@@ -57,23 +57,26 @@ const CheckoutPage = () => {
             const response = await orderService.createOrder({
                 user_id: cart.user_id,
                 items: cart.items,
-                total: finalTotal 
+                total_price: finalTotal
             });
             
-            if (response.order_id) {
-                // 1. Dọn dẹp Local Storage
+            if (response?.order_id || response?.orderData?.order_id) {
+                
                 localStorage.removeItem(`cart_${cart.user_id}`);
 
-                // 2. Gọi service để xóa giỏ hàng phía Backend
                 try {
                     await cartService.clearCart(cart.user_id);
                 } catch (clearErr) {
-                    console.error("Lỗi khi xóa giỏ hàng server:", clearErr);
-                    // Vẫn cho phép chuyển trang vì đơn hàng đã tạo thành công
+                    console.error("Lỗi xóa giỏ hàng:", clearErr);
                 }
 
-                // 3. Chuyển hướng sang trang SuccessPage với mã đơn hàng
-                navigate("/order-confirmation", { state: { order_id: response.order_id } });
+                // Chuyển trang với ID đúng
+                navigate("/order-confirmation", { 
+                    state: { order_id: response.order_id || response.orderData.order_id } 
+                });
+            } else {
+                // Hiển thị thông báo lỗi từ server/mock nếu có[cite: 21]
+                alert(response.message || "Không thể tạo đơn hàng!");
             }
         } catch (err) {
             alert("Có lỗi xảy ra khi xử lý đơn hàng!");

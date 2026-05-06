@@ -139,17 +139,17 @@ describe('Checkout Integration Tests', () => {
         expect(screen.getByTestId('discount-amount')).toHaveTextContent('-0 VNĐ');
     });
 
-    // test('TC9: Xử lý mã không đủ điều kiện đơn hàng tối thiểu', () => {
-    //     // Tạo giỏ hàng giá trị thấp (ví dụ 50.000đ)
-    //     const lowValueCart = { ...VALID_CART, items: [{ name: 'Pin', price: 50000, quantity: 1 }] };
-    //     renderCheckout(lowValueCart);
+    test('TC9: Xử lý mã không đủ điều kiện đơn hàng tối thiểu', () => {
+        // Tạo giỏ hàng giá trị thấp (ví dụ 50.000đ)
+        const lowValueCart = { ...VALID_CART, items: [{ name: 'Pin', price: 50000, quantity: 1 }] };
+        renderCheckout(lowValueCart);
         
-    //     const input = screen.getByPlaceholderText(/Nhập mã/i);
-    //     fireEvent.change(input, { target: { value: 'GIAM10' } }); // Giả sử mã này yêu cầu minOrder cao hơn
-    //     fireEvent.click(screen.getByText('Áp dụng'));
+        const input = screen.getByPlaceholderText(/Nhập mã/i);
+        fireEvent.change(input, { target: { value: 'GIAM10' } }); // Giả sử mã này yêu cầu minOrder cao hơn
+        fireEvent.click(screen.getByText('Áp dụng'));
 
-    //     expect(screen.getByText(/Đơn hàng phải từ/i)).toBeInTheDocument();
-    // });
+        expect(screen.getByText(/Đơn hàng phải từ/i)).toBeInTheDocument();
+    });
 
     test('TC10: Kiểm tra hành động rê chuột', () => {
         renderCheckout(VALID_CART);

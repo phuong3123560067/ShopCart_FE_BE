@@ -101,7 +101,7 @@ function CartComponent({ user_id: propUser_id }) {
     };
 
     // Thêm dấu ?. và kiểm tra nếu chưa có cart thì mặc định là 0
-    const finalTotal = cart?.total || 0;
+    const finalTotal = cart?.total_price || 0;
 
     if (error) return <div style={{ color: 'red', padding: '20px' }}>{error}</div>;
     if (loading) return <div style={{ padding: '20px' }}>Đang tải giỏ hàng...</div>;
@@ -143,7 +143,7 @@ function CartComponent({ user_id: propUser_id }) {
                         e.currentTarget.style.shadow = 'none';
                     }}>
                         <div style={{ backgroundColor: '#f8f9fa', borderRadius: '8px', padding: '10px', marginBottom: '12px' }}>
-                            <image_url src={product.image_url} alt={product.name} style={{ width: '100%', height: '120px', objectFit: 'contain' }} />
+                            <img src={product.image_url} alt={product.name} style={{ width: '100%', height: '120px', objectFit: 'contain' }} />
                         </div>
                         <h4 style={{ margin: '10px 0 5px', fontSize: '16px', color: '#333' }}>{product.name}</h4>
                         <p style={{ color: '#e44d26', fontWeight: 'bold', fontSize: '18px', margin: '5px 0' }}>

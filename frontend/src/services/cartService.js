@@ -53,8 +53,7 @@ export const updateQuantity = async (user_id, product_id, newQuantity) => {
         // Tính toán lại total
         const subTotal = mockCart.items.reduce((sum, i) => sum + (i.quantity * i.price), 0);
         
-        // Nếu giỏ hàng trống, total PHẢI là 0
-        mockCart.total_price = subTotal > 0 ? subTotal + SHIPPING.DEFAULT : 0;
+        mockCart.total_price = subTotal;
     }
     
     return { 

@@ -25,7 +25,7 @@ describe('Unit Test: cartService Logic', () => {
         expect(result.message).toContain('hết hàng');
     });
 
-    test('TC3: updateQuantity tính đúng phí vận chuyển', async () => {
+    test('TC3: updateQuantity tính đúng tổng tiền hàng (không bao gồm phí vận chuyển)', async () => {
         const product = { ...PRODUCT_AVAILABLE, price: 50000, stock: 20 };
         const user_id = 'user01';
         
@@ -33,8 +33,9 @@ describe('Unit Test: cartService Logic', () => {
         const result = await cartService.updateQuantity(user_id, product.product_id, 2);
         
         expect(result.success).toBe(true);
-        // (2 * 50.000) + 30.000 = 130.000[cite: 4, 7]
-        const expectedTotal = 100000 + SHIPPING.DEFAULT; 
+
+        // Tổng tiền hàng = Số lượng (2) * Đơn giá (50.000) = 100.000
+        const expectedTotal = 100000 
         expect(result.newTotal).toBe(expectedTotal); 
     });
 

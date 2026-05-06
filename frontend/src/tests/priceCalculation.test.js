@@ -43,7 +43,7 @@ describe("Price Calculation Tests", () => {
 
     test("TC4: Tổng cuối cùng (Subtotal + Shipping - Discount)", () => {
         const coupon = { type: "percent", value: 20 }; 
-        const shippingFee = SHIPPING.DEFAULT; // 30000[cite: 12]
+        const shippingFee = SHIPPING.DEFAULT; // 30000
 
         const result = calculateOrderPrice(VALID_CART.items, coupon, shippingFee);
 
