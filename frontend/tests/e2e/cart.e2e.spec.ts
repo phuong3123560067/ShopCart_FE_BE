@@ -59,7 +59,7 @@ test.describe('ShopCart System - E2E Tests', () => {
         await expect(outOfStockBtn).toBeDisabled();
         await expect(outOfStockBtn).toHaveText('Hết hàng');
 
-        // 2. Thêm sản phẩm và đi tới Checkout[cite: 5]
+        // 2. Thêm sản phẩm và đi tới Checkout
         await cartPage.getAddBtn(999).click();
         await cartPage.checkoutBtn.click();
 

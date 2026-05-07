@@ -15,7 +15,7 @@ test.describe('Purchase E2E Tests - ShopCart System', () => {
         // Đăng nhập thật để đồng nhất luồng
         await cartPage.login('test@gmail.com', '123'); 
         
-        // Thêm Laptop Dell (ID: 1, Giá 20.000.000)[cite: 14]
+        // Thêm Laptop Dell (ID: 1, Giá 20.000.000)
         await cartPage.getAddBtn(1).click();
         await expect(cartPage.successToast).toBeVisible();
         

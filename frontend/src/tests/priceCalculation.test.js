@@ -50,6 +50,15 @@ describe("Price Calculation Tests", () => {
         // 21tr - (21tr * 0.2) + 30k = 16,8tr + 30k = 16,830,000
         expect(result.total).toBe(16830000); 
     });
+
+    test("TC5: Kiểm tra ngoại lệ khi cartItems không phải là mảng", () => {
+        expect(() => calculateOrderPrice(null)).toThrow("Giỏ hàng không hợp lệ");
+        expect(() => calculateOrderPrice(undefined)).toThrow("Giỏ hàng không hợp lệ");
+    });
+
+    test("TC6: Kiểm tra ngoại lệ khi phí vận chuyển âm", () => {
+        expect(() => calculateOrderPrice(VALID_CART.items, null, -5000)).toThrow("Phí ship không hợp lệ");
+    });
 });
 
 describe("Inventory Tests", () => {

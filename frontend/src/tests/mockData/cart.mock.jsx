@@ -65,7 +65,7 @@ export const COUPONS = {
         coupon_id: 1,
         code: "GIAM10", 
         discount_percent: 10, 
-        min_order_value: 100000 
+        min_order_value: 1000000 
     },
     "FREESHIP": {
         coupon_id: 2,

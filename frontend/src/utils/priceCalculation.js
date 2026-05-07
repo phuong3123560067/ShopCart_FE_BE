@@ -1,6 +1,6 @@
 export function calculateOrderPrice(cartItems, coupon = null, shippingFee = 0) {
     if (!Array.isArray(cartItems)) {
-        throw new Error("Invalid cart");
+        throw new Error("Giỏ hàng không hợp lệ");
     }
 
     const subtotal = cartItems.reduce((sum, item) => {
@@ -18,7 +18,7 @@ export function calculateOrderPrice(cartItems, coupon = null, shippingFee = 0) {
     }
 
     if (shippingFee < 0) {
-        throw new Error("Invalid shipping fee");
+        throw new Error("Phí ship không hợp lệ");
     }
 
     // Sử dụng Math.max(0, ...) để tránh trường hợp tổng tiền bị âm nếu discount > subtotal
