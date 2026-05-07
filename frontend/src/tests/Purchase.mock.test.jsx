@@ -33,7 +33,7 @@ describe('Purchase Mock Tests', () => {
             await orderService.createOrder({ items, user_id: 'user01' });
         }
 
-        // Verify: Kiểm tra xem đã gọi đúng mã sản phẩm P999 chưa
+        // Verify: Kiểm tra xem đã gọi đúng mã sản phẩm 999 chưa
         expect(inventoryService.checkStock).toHaveBeenCalledWith(
             expect.arrayContaining([
                 expect.objectContaining({ product_id: PRODUCT_AVAILABLE.product_id })
@@ -47,7 +47,7 @@ describe('Purchase Mock Tests', () => {
         vi.mocked(inventoryService.checkStock).mockResolvedValue({ available: false });
 
         const items = [{ 
-            product_id: PRODUCT_OUT_OF_STOCK.product_id, // 'P000'
+            product_id: PRODUCT_OUT_OF_STOCK.product_id, // '0'
             quantity: 1 
         }];
         

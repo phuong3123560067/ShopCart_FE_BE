@@ -161,4 +161,35 @@ describe('Cart Component Integration Tests', () => {
         expect(addBtn).toBeDisabled(); // Kiểm tra nút bị khóa
         expect(addBtn).toHaveTextContent(/Hết hàng/i);
     });
+
+    test('TC8: Hiển thị thông báo lỗi khi Service.getCart bị sập (Phủ khối catch)', async () => {
+        // Giả lập Service trả về một Promise bị Reject (Lỗi)
+        cartService.getCart.mockRejectedValue(new Error("Database Error"));
+
+        render(
+            <BrowserRouter>
+                <CartComponent user_id="user01" />
+            </BrowserRouter>
+        );
+
+        // Kiểm tra xem giao diện có hiện đúng câu thông báo lỗi không
+        const errorMsg = await screen.findByText(/Lỗi tải giỏ hàng/i);
+        expect(errorMsg).toBeInTheDocument();
+    });
+
+    test('TC9: Hiển thị giao diện giỏ hàng trống và nút quay lại mua sắm', async () => {
+        // Giả lập Service trả về giỏ hàng không có sản phẩm nào
+        cartService.getCart.mockResolvedValue({ items: [], total_price: 0 });
+
+        render(
+            <BrowserRouter>
+                <CartComponent user_id="user01" />
+            </BrowserRouter>
+        );
+
+        // Đợi và kiểm tra dòng chữ thông báo trống và không hiện nút thanh toán
+        expect(await screen.findByText(/Giỏ hàng đang trống/i)).toBeInTheDocument();
+
+        expect(await screen.queryByTestId('checkout-btn')).not.toBeInTheDocument();
+    });
 });

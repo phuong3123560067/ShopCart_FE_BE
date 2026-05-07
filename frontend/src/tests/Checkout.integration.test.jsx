@@ -163,4 +163,38 @@ describe('Checkout Integration Tests', () => {
         expect(confirmBtn.style.backgroundColor).toBe('rgb(56, 161, 105)');
     });
 
+    test('TC11: Hiển thị thông báo khi nhập mã giảm giá linh tinh', async () => {
+        renderCheckout(VALID_CART);
+        const input = screen.getByPlaceholderText(/Nhập mã/i);
+        const applyBtn = screen.getByText('Áp dụng');
+
+        fireEvent.change(input, { target: { value: 'LUA_DAO_100K' } });
+        fireEvent.click(applyBtn);
+
+        // Dòng này giúp phủ nhánh báo lỗi promo không tồn tại
+        expect(screen.getByText(/Mã giảm giá không hợp lệ/i)).toBeInTheDocument();
+    });
+
+    test('TC12: Hiển thị alert khi đặt hàng thất bại từ phía server', async () => {
+        // Giả lập window.alert vì trong code bạn dùng alert()
+        const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => {});
+        
+        // Mock createOrder trả về success: false
+        vi.mocked(orderService.createOrder).mockResolvedValue({ 
+            success: false, 
+            message: 'Lỗi kết nối server' 
+        });
+
+        renderCheckout(VALID_CART);
+        const confirmBtn = screen.getByTestId('confirm-checkout');
+        
+        fireEvent.click(confirmBtn);
+
+        await waitFor(() => {
+            expect(alertMock).toHaveBeenCalledWith(expect.stringContaining('Lỗi kết nối server'));
+        });
+        
+        alertMock.mockRestore();
+    });
+
 });
