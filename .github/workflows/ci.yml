@@ -49,11 +49,3 @@ jobs:
         name: playwright-report
         path: ./frontend/playwright-report/
         retention-days: 14
-
-    - name: Upload Test Results
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-results
-        path: ./frontend/test-results/
-        retention-days: 7
