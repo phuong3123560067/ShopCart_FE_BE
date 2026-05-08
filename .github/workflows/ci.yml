@@ -1,6 +1,5 @@
 name: ShopCart CI/CD Pipeline
 
-# Kích hoạt workflow khi có sự kiện Push hoặc Pull Request vào các nhánh chính
 on:
   push:
     branches: [ main, master, develop ]
@@ -11,6 +10,11 @@ jobs:
   run-tests:
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    
+    # Thiết lập mặc định: Mọi câu lệnh bên dưới sẽ được chạy bên trong thư mục frontend
+    defaults:
+      run:
+        working-directory: ./frontend
 
     steps:
     - name: Checkout mã nguồn
@@ -19,27 +23,26 @@ jobs:
     - name: Thiết lập môi trường NodeJS
       uses: actions/setup-node@v4
       with:
-        node-version: 18 # Sử dụng Node v18 tương thích tốt với React 19 và Vite 8
+        node-version: 18
         cache: 'npm'
+        cache-dependency-path: './frontend/package-lock.json' # Chỉ định đúng file lock nằm trong frontend
 
     - name: Cài đặt các thư viện (Dependencies)
-      run: npm ci # Sử dụng npm ci để cài đặt đúng phiên bản từ package-lock.json
+      run: npm ci --legacy-peer-deps
 
     - name: Cài đặt môi trường trình duyệt cho Playwright
       run: npx playwright install --with-deps
 
     - name: 1. Chạy Unit & Integration Test (Vitest)
-      # Chạy chế độ "run" (chạy một lần rồi thoát) thay vì "watch" để tránh treo CI
       run: npx vitest run --config vitest.config.ts
 
     - name: 2. Chạy E2E Test (Playwright)
-      # Sử dụng câu lệnh đã cấu hình sẵn trong package.json của bạn
       run: npm run test:e2e
 
     - name: Tải báo cáo kiểm thử lên GitHub Artifacts
-      if: always() # Luôn chạy bước này kể cả khi có bài test bị tạch để tải báo cáo về xem lỗi
+      if: always()
       uses: actions/upload-artifact@v4
       with:
         name: playwright-report
-        path: playwright-report/
+        path: frontend/playwright-report/ # Trỏ đúng đường dẫn báo cáo nằm trong thư mục frontend
         retention-days: 7
