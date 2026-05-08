@@ -28,7 +28,7 @@ jobs:
         cache-dependency-path: './frontend/package-lock.json' # Chỉ định đúng file lock nằm trong frontend
 
     - name: Cài đặt các thư viện (Dependencies)
-      run: npm ci --legacy-peer-deps
+      run: npm install --legacy-peer-deps
 
     - name: Cài đặt môi trường trình duyệt cho Playwright
       run: npx playwright install --with-deps
