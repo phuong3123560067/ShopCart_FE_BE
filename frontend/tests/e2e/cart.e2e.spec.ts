@@ -8,7 +8,8 @@ test.describe('ShopCart System - E2E Tests', () => {
         cartPage = new CartPage(page);
         
         // 1. Đi đến trang gốc (thường là Login)
-        await page.goto('http://localhost:5173');
+        // await page.goto('http://localhost:5173');
+        await page.goto('/');
         
         // 2. Thực hiện đăng nhập thông qua phương thức đã định nghĩa trong POM
         // Sử dụng tài khoản test từ mock data của bạn
