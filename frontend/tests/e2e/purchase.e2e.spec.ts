@@ -10,8 +10,8 @@ test.describe('Purchase E2E Tests - ShopCart System', () => {
         cartPage = new CartPage(page);
         checkoutPage = new CheckoutPage(page);
         
-        // await page.goto('http://localhost:5173');
-        await page.goto('/');
+        await page.goto('http://localhost:5173');
+        // await page.goto('/');
         
         // Đăng nhập thật để đồng nhất luồng
         await cartPage.login('test@gmail.com', '123'); 
