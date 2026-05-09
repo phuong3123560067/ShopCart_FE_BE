@@ -47,8 +47,9 @@ class OrderControllerIntegrationTest {
     @DisplayName("POST /api/orders - Tạo đơn hàng thành công")
     void testCreateOrder() throws Exception {
         // 1. Chuẩn bị DTO đặt hàng[cite: 2]
+// Sửa "P001" thành 1L
         OrderRequest request = OrderRequest.builder()
-                .items(List.of(new OrderItemRequest("P001", 2, 15000000L)))
+                .items(List.of(new OrderItemRequest(1L, 2, 15000000L))) 
                 .shippingFee(50000L)
                 .build();
 

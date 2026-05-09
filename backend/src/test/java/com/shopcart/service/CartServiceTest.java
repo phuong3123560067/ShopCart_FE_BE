@@ -1,25 +1,38 @@
 package com.shopcart.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shopcart.dto.CartItemRequest;
 import com.shopcart.dto.CartResponse; // Hoặc CartItem tùy thuộc vào kiểu trả về của bạn
 import com.shopcart.entity.Product;    // Chỉnh lại từ ProductExample thành Product nếu cần
+import com.shopcart.entity.Cart;
 import com.shopcart.entity.CartItem;   
 import com.shopcart.repository.ProductRepository;
+import com.shopcart.repository.CartItemRepository;
 import com.shopcart.repository.CartRepository;
+import com.shopcart.repository.OrderRepository;
+
+import org.apache.tomcat.util.http.parser.MediaType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,162 +48,372 @@ class CartServiceTest {
     @InjectMocks
     private CartService cartService;
 
-@Test
-    @DisplayName("TC1: Them san pham vao gio hang thanh cong")
-    void testAddToCartSuccess() {
-        // 1. Khởi tạo Product đúng kiểu Entity và Constructor
-        Product product = new Product(1L, "Laptop Dell", 15000000L, 10);
+    @Mock
+    private CartItemRepository cartItemRepository;
 
-        // 2. Khởi tạo Request đúng DTO
-        CartItemRequest request = new CartItemRequest(1L, 2);
+    @Mock
+    private OrderRepository orderRepository; 
+    
+    @Autowired
+    private MockMvc mockMvc;
 
-        // 3. Giả lập hành vi (Stubbing) giống hệt hình mẫu
-        when(productRepository.findById(1L))
-                .thenReturn(Optional.of(product));
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Test
+    @DisplayName("TC1: Thêm vào giỏ thành công")
+    void testAddToCartSuccess_Service() {
+        CartItemRequest request = new CartItemRequest(1, 2);
+        Product product = new Product();
+        product.setId(1);
+        product.setName("Dell G15");
+        product.setPrice(new BigDecimal("15000000"));
+        product.setStock(100);
+
+        when(productRepository.findById(1)).thenReturn(Optional.of(product));
+        Cart mockCart = new Cart();
+        mockCart.setId(100);
+        when(cartRepository.findByUserId(1)).thenReturn(Optional.of(mockCart));
+        when(cartItemRepository.findByCartIdAndProductId(100, 1)).thenReturn(Optional.empty());
         
-        when(cartRepository.save(any(CartItem.class)))
-                .thenAnswer(inv -> inv.getArgument(0)); // Trả về chính đối tượng được lưu[cite: 1]
+        CartItem newItem = new CartItem(null, 100, 1, 2);
+        when(cartItemRepository.findByCartId(100)).thenReturn(List.of(newItem));
 
-        // 4. Thực thi: Hứng bằng CartResponse để tránh lỗi Type Mismatch[cite: 2, 6]
-        CartResponse result = cartService.addToCart("user01", request);
+        CartResponse response = cartService.addToCart(1, request);
 
-        // 5. Kiểm tra kết quả (Assert) giống hệt hình mẫu
-        assertNotNull(result);
-        assertEquals(2, result.getQuantity());
-        assertEquals("Laptop Dell", result.getProductName());
-
-        // 6. Xác minh (Verify) giống hệt hình mẫu
-        verify(cartRepository, times(1))
-                .save(any(CartItem.class));
+        assertNotNull(response);
+        assertEquals(0, new BigDecimal("30000000").compareTo(response.getCartTotal()));
+        assertEquals("Đã thêm Dell G15 vào giỏ hàng", response.getMessage());
     }
 
     @Test
-    @DisplayName("TC2: Them san pham da co trong gio - Cong don so luong")
+    @DisplayName("TC2: Thêm sản phẩm đã có - Cộng dồn số lượng")
     void testAddToCartExistingProduct() {
-        // 1. Giả lập Product tồn tại
-        Product product = new Product(1L, "Dell G15", 25000000L, 10);
-        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        Product product = new Product();
+        product.setId(1);
+        product.setStock(50);
+        product.setPrice(new BigDecimal("1000"));
+        product.setName("Dell G15");
+        when(productRepository.findById(1)).thenReturn(Optional.of(product));
 
-        // 2. Giả lập đã có 1 sản phẩm trong giỏ
-        CartItem existingItem = new CartItem("user1", 1L, "Dell G15", 
-                                     BigDecimal.valueOf(25000000), 1);
-        // Sử dụng anyString() và anyLong() để đảm bảo Mock nhận diện đúng tham số truyền vào
-        when(cartRepository.findByUserIdAndProductId(anyString(), anyLong()))
-                .thenReturn(Optional.of(existingItem));
+        Cart mockCart = new Cart();
+        mockCart.setId(100);
+        when(cartRepository.findByUserId(1)).thenReturn(Optional.of(mockCart));
 
-        // 3. SỬA TẠI ĐÂY: Trả về bất kỳ CartItem nào được save (đã cộng dồn)
-        when(cartRepository.save(any(CartItem.class))).thenAnswer(invocation -> {
-            CartItem savedItem = invocation.getArgument(0);
-            return savedItem; // Trả về đối tượng sau khi Service đã thực hiện setQuantity(3)
-        });
+        // Đã có 1, thêm 2 -> sẽ thành 3
+        CartItem existingItem = new CartItem(50, 100, 1, 1);
+        when(cartItemRepository.findByCartIdAndProductId(100, 1)).thenReturn(Optional.of(existingItem));
+        
+        // Mock cho getCartResponse sau khi cộng dồn
+        CartItem updatedItem = new CartItem(50, 100, 1, 3);
+        when(cartItemRepository.findByCartId(100)).thenReturn(List.of(updatedItem));
 
-        // 4. Thực thi
-        CartItemRequest request = new CartItemRequest(1L, 2); 
-        CartResponse response = cartService.addToCart("user1", request);
+        CartItemRequest request = new CartItemRequest();
+        request.setProductId(1);
+        request.setQuantity(2);
+        
+        CartResponse response = cartService.addToCart(1, request);
 
-        // 5. Kiểm tra kết quả
-        assertNotNull(response);
-        assertEquals(3, response.getQuantity()); 
-        // Verify xem có đúng là lệnh save đã được gọi hay không
-        verify(cartRepository, times(1)).save(any(CartItem.class));
+        assertEquals(3, response.getItems().get(0).getQuantity());
+        verify(cartItemRepository).save(any(CartItem.class));
     }
 
     @Test
     @DisplayName("TC3: Them san pham khi ton kho khong du - Bao loi")
     void testAddToCartInsufficientStock() {
-        CartItemRequest request = new CartItemRequest(1L, 20); 
-        Product product = new Product(1L, "Laptop Dell", 15000000L, 10); 
+        // 1. Khởi tạo Request
+        CartItemRequest request = new CartItemRequest();
+        request.setProductId(1);
+        request.setQuantity(20);
 
-        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        // 2. Khởi tạo Product: Tồn kho chỉ có 10
+        Product product = new Product();
+        product.setId(1);
+        product.setStock(10);
+        when(productRepository.findById(1)).thenReturn(Optional.of(product));
 
-        assertThrows(RuntimeException.class, () -> {
-            cartService.addToCart("user01", request);
+        // BỔ SUNG: Giả lập tìm thấy giỏ hàng cho user 1 để tránh lỗi Null
+        Cart mockCart = new Cart();
+        mockCart.setId(100);
+        when(cartRepository.findByUserId(1)).thenReturn(Optional.of(mockCart));
+
+        // BỔ SUNG: Giả lập kiểm tra sản phẩm đã có trong giỏ chưa (trả về trống)
+        when(cartItemRepository.findByCartIdAndProductId(100, 1)).thenReturn(Optional.empty());
+
+        // 3. Thực thi và Kiểm tra ngoại lệ
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            cartService.addToCart(1, request);
         }); 
+
+        // Kiểm tra thông báo lỗi (Cập nhật cho khớp với Service)
+        assertTrue(exception.getMessage().contains("Không đủ tồn kho"));
         
-        verify(cartRepository, never()).save(any(CartItem.class));
+        // 4. Xác minh: Lệnh save không được gọi
+        verify(cartItemRepository, never()).save(any(CartItem.class));
     }
 
     @Test
     @DisplayName("TC4: Them san pham khong ton tai - Bao loi")
     void testAddToCartProductNotFound() {
-        // 1. Given: Sử dụng 999L thay vì "P999" để khớp với kiểu Long của productId
-        CartItemRequest request = new CartItemRequest(999L, 1);
+        // 1. Given: Sử dụng Integer 999 thay vì 999L để khớp với kiểu serial trong SQL
+        CartItemRequest request = new CartItemRequest();
+        request.setProductId(999); // DTO có thể nhận Long, Service sẽ dùng .intValue()
+        request.setQuantity(1);
         
-        // Đảm bảo findById cũng nhận tham số 999L
-        when(productRepository.findById(999L)).thenReturn(Optional.empty());
+        // findById yêu cầu tham số Integer
+        when(productRepository.findById(999)).thenReturn(Optional.empty());
 
-        // 2. When & Then: Kiểm tra việc ném ngoại lệ
+        // 2. When & Then: userId truyền vào phải là Integer (ví dụ: 1)
         assertThrows(RuntimeException.class, () -> {
-            cartService.addToCart("user01", request);
+            cartService.addToCart(1, request); // Tham số là (Integer, CartItemRequest)
         });
 
-        // Xác minh rằng lệnh save không bao giờ được gọi khi có lỗi
-        verify(cartRepository, never()).save(any(CartItem.class));
+        // 3. Xác minh: Lệnh save của cartItemRepository không được gọi
+        // Sử dụng cartItemRepository thay vì cartRepository để tránh lỗi Type Mismatch
+        verify(cartItemRepository, never()).save(any(CartItem.class));
     }
 
     @Test
     @DisplayName("TC5: Cap nhat so luong trong gio hang thanh cong")
-    void testUpdateQuantitySuccess() {
-        // 1. Given
-        CartItem existingItem = new CartItem("user01", 1L, "Laptop Dell", 
-                                     BigDecimal.valueOf(15000000), 2);
-        Product product = new Product(1L, "Laptop Dell", 15000000L, 10);
+void testUpdateQuantitySuccess() {
+        Cart mockCart = new Cart();
+        mockCart.setId(100);
+        when(cartRepository.findByUserId(1)).thenReturn(Optional.of(mockCart));
+
+        CartItem existingItem = new CartItem(50, 100, 1, 2);
+        when(cartItemRepository.findByCartIdAndProductId(100, 1)).thenReturn(Optional.of(existingItem));
         
-        // Đóng gói tham số vào Request giống như bài mẫu TC1
-        CartItemRequest request = new CartItemRequest(1L, 5); 
+        Product p = new Product();
+        p.setId(1); p.setPrice(new BigDecimal("1000")); p.setStock(10); p.setName("P1");
+        when(productRepository.findById(1)).thenReturn(Optional.of(p));
 
-        when(cartRepository.findByUserIdAndProductId("user01", 1L)).thenReturn(Optional.of(existingItem));
-        when(cartRepository.save(any(CartItem.class))).thenAnswer(inv -> inv.getArgument(0));
+        // Giả lập sau khi update trong DB trả về list mới có quantity là 5
+        CartItem updatedItem = new CartItem(50, 100, 1, 5);
+        when(cartItemRepository.findByCartId(100)).thenReturn(List.of(updatedItem));
 
-        // 2. When: Truyền đúng đối tượng request
-        CartResponse result = cartService.updateQuantity("user01", request); 
+        CartItemRequest request = new CartItemRequest();
+        request.setProductId(1);
+        request.setQuantity(5);
 
-        // 3. Then
-        assertEquals(5, result.getQuantity());
-        verify(cartRepository).save(any(CartItem.class));
+        CartResponse result = cartService.updateQuantity(1, request); 
+
+        assertEquals(5, result.getItems().get(0).getQuantity());
+        verify(cartItemRepository).save(any(CartItem.class));
     }
 
     @Test
     @DisplayName("TC6: Xoa san pham khoi gio hang")
     void testRemoveFromCart() {
-        // 1. Given: Chuyển "P001" thành 1L để khớp với kiểu Long của Entity
-        CartItem existingItem = new CartItem("user01", 1L, "Laptop Dell", 
-                                     BigDecimal.valueOf(15000000), 2);
+        // 1. Given: Khởi tạo dữ liệu với kiểu Integer để khớp với SQL
+        Cart mockCart = new Cart();
+        mockCart.setId(100);
+        mockCart.setUserId(1); // userId kiểu Integer
+
+        CartItem existingItem = new CartItem();
+        existingItem.setId(50);
+        existingItem.setCartId(100);
+        existingItem.setProductId(1);
+        existingItem.setQuantity(2);
         
-        // Đảm bảo tham số truyền vào findBy... cũng là 1L
-        when(cartRepository.findByUserIdAndProductId("user01", 1L))
+        // Giả lập tìm Giỏ hàng (Cart) của User trước để lấy cartId
+        when(cartRepository.findByUserId(1)).thenReturn(Optional.of(mockCart));
+
+        // Sửa lỗi findBy...: Tìm trong cartItemRepository bằng cartId và productId
+        when(cartItemRepository.findByCartIdAndProductId(100, 1))
                 .thenReturn(Optional.of(existingItem));
 
-        // 2. When: Chuyển tham số productId thành 1L
-        cartService.removeFromCart("user01", 1L);
+        // 2. When: Sử dụng Integer cho cả userId và productId
+        cartService.removeFromCart(1, 1);
 
-        // 3. Then: Xác minh lệnh xóa được gọi
-        verify(cartRepository, times(1)).delete(existingItem);
+        // 3. Then: Xác minh lệnh xóa được gọi qua cartItemRepository
+        // Sửa lỗi: delete(CartItem) phải gọi từ cartItemRepository
+        verify(cartItemRepository, times(1)).delete(existingItem);
     }
 
     @Test
-    @DisplayName("TC7: Validate quantity <= 0")
     void testAddToCartInvalidQuantity() {
-        CartItemRequest request = new CartItemRequest(1L, 0);
-        
-        CartResponse response = cartService.addToCart("user1", request);
-        
-        assertFalse(response.isSuccess());
-        assertEquals("Số lượng không hợp lệ", response.getMessage());
+        CartItemRequest request = new CartItemRequest();
+        request.setQuantity(-1); // Số lượng sai
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            cartService.addToCart(1, request);
+        });
+
+        assertEquals("Số lượng không hợp lệ", exception.getMessage());
     }
 
     @Test
     @DisplayName("TC8: Thêm sản phẩm mới vào giỏ")
     void testAddToCartNewProduct() {
-        Product product = new Product(2L, "Mouse", BigDecimal.valueOf(500000), 20);
-        when(productRepository.findById(2L)).thenReturn(Optional.of(product));
-        when(cartRepository.findByUserIdAndProductId(anyString(), anyLong())).thenReturn(Optional.empty());
-        when(cartRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        // 1. Given: Thiết lập sản phẩm
+        Product product = new Product();
+        product.setId(2); 
+        product.setName("Mouse");
+        product.setPrice(BigDecimal.valueOf(500000));
+        product.setStock(20);
 
-        CartResponse response = cartService.addToCart("user1", new CartItemRequest(2L, 3));
+        // Mock cho cả quá trình kiểm tra tồn kho VÀ quá trình xây dựng response
+        when(productRepository.findById(2)).thenReturn(Optional.of(product));
 
+        // Thiết lập giỏ hàng
+        Cart mockCart = new Cart();
+        mockCart.setId(100);
+        mockCart.setUserId(1);
+        when(cartRepository.findByUserId(1)).thenReturn(Optional.of(mockCart));
+
+        // Giả lập sản phẩm chưa có trong giỏ
+        when(cartItemRepository.findByCartIdAndProductId(100, 2)).thenReturn(Optional.empty());
+
+        // Tạo một CartItem đại diện cho kết quả sau khi lưu vào DB
+        CartItem savedItem = new CartItem();
+        savedItem.setCartId(100);
+        savedItem.setProductId(2);
+        savedItem.setQuantity(3);
+
+        // Mock cho hàm getCartResponse gọi lấy danh sách items
+        when(cartItemRepository.findByCartId(100)).thenReturn(List.of(savedItem));
+        when(cartItemRepository.save(any(CartItem.class))).thenAnswer(i -> i.getArgument(0));
+
+        // 2. When: Thực thi hành động thêm vào giỏ
+        CartItemRequest request = new CartItemRequest();
+        request.setProductId(2);
+        request.setQuantity(3);
+        
+        // Tên biến ở đây là 'response'
+        CartResponse response = cartService.addToCart(1, request);
+
+        // 3. Then: Kiểm tra kết quả
         assertTrue(response.isSuccess());
-        assertEquals(3, response.getQuantity());
+        // Sửa 'result' thành 'response' để khớp với biến đã khai báo
+        assertNotNull(response.getItems());
+        assertEquals(3, response.getItems().get(0).getQuantity());
+        
+        verify(cartItemRepository, times(1)).save(any(CartItem.class));
     }
 
+@Test
+    @DisplayName("TC9: Áp dụng mã giảm giá thành công")
+    void testApplyCoupon_Success() {
+        Product product = new Product();
+        product.setId(1);
+        product.setPrice(new BigDecimal("1000000"));
+        product.setName("P1");
+        when(productRepository.findById(1)).thenReturn(Optional.of(product));
+
+        Cart mockCart = new Cart();
+        mockCart.setId(100);
+        when(cartRepository.findByUserId(1)).thenReturn(Optional.of(mockCart));
+
+        CartItem item = new CartItem(null, 100, 1, 1);
+        when(cartItemRepository.findByCartId(100)).thenReturn(List.of(item));
+
+        CartResponse response = cartService.applyCoupon(1, "GIAM500K");
+
+        // Sử dụng compareTo cho BigDecimal thay vì assertEquals với double
+        assertEquals(0, new BigDecimal("500000").compareTo(response.getCartTotal()));
+        assertEquals(0, new BigDecimal("500000").compareTo(response.getDiscountAmount()));
+    }
+
+    @Test
+    @DisplayName("TC10: Lấy thông tin giỏ hàng thành công")
+    public void testGetCart_Success() {
+        Product p1 = new Product();
+        p1.setId(1); p1.setName("P1"); p1.setPrice(new BigDecimal("200000"));
+        when(productRepository.findById(1)).thenReturn(Optional.of(p1));
+
+        Cart mockCart = new Cart();
+        mockCart.setId(100);
+        when(cartRepository.findByUserId(1)).thenReturn(Optional.of(mockCart));
+
+        CartItem item1 = new CartItem(null, 100, 1, 2);
+        when(cartItemRepository.findByCartId(100)).thenReturn(List.of(item1));
+
+        CartResponse response = cartService.getCartResponse(1);
+
+        assertEquals(0, new BigDecimal("400000").compareTo(response.getCartTotal()));
+        assertEquals("Lấy thông tin giỏ hàng thành công", response.getMessage());
+    }
+
+    @Test
+    @DisplayName("TC11: Hủy mã giảm giá thành công")
+    public void testRemoveCoupon_Success() {
+        Product p = new Product();
+        p.setId(1); p.setName("P1"); p.setPrice(new BigDecimal("500000"));
+        when(productRepository.findById(1)).thenReturn(Optional.of(p));
+
+        Cart mockCart = new Cart();
+        mockCart.setId(100);
+        when(cartRepository.findByUserId(1)).thenReturn(Optional.of(mockCart));
+        when(cartItemRepository.findByCartId(100)).thenReturn(List.of(new CartItem(null, 100, 1, 1)));
+
+        CartResponse response = cartService.removeCoupon(1);
+
+        assertEquals(0, new BigDecimal("500000").compareTo(response.getCartTotal())); 
+        assertEquals("Đã hủy mã giảm giá", response.getMessage());
+    }
+    
+    @Test
+    @DisplayName("TC12: Checkout lỗi khi giỏ hàng trống")
+    void checkout_ShouldThrowException_WhenCartIsEmpty() {
+        when(cartItemRepository.findByCartId(1)).thenReturn(Collections.emptyList());
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            cartService.checkout(1);
+        });
+
+        assertEquals("Giỏ hàng đang trống, không thể thanh toán", exception.getMessage());
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("TC 13: Tạo giỏ hàng mới nếu người dùng chưa có giỏ")
+    void testGetCartResponse_CreateNewCart() {
+        Integer userId = 99;
+        
+        // Giả lập: Không tìm thấy giỏ hàng cho user này
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.empty());
+        
+        // Giả lập: Lưu giỏ hàng mới thành công
+        Cart newCart = new Cart();
+        newCart.setId(500);
+        newCart.setUserId(userId);
+        when(cartRepository.save(any(Cart.class))).thenReturn(newCart);
+        
+        // Mock danh sách item rỗng cho giỏ hàng mới
+        when(cartItemRepository.findByCartId(500)).thenReturn(Collections.emptyList());
+
+        // Thực thi
+        CartResponse response = cartService.getCartResponse(userId);
+
+        // Kiểm chứng
+        assertNotNull(response);
+        verify(cartRepository, times(1)).save(any(Cart.class)); // Xác nhận nhánh save đã chạy
+        assertEquals(0, response.getItemsCount());
+    }
+
+    @Test
+    @DisplayName("TC 14: Xóa sản phẩm khỏi giỏ khi cập nhật số lượng <= 0")
+    void testUpdateQuantity_DeleteWhenZero() {
+        Integer userId = 1;
+        CartItemRequest req = new CartItemRequest(1, 0); // Số lượng = 0
+        
+        Cart mockCart = new Cart();
+        mockCart.setId(100);
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.of(mockCart));
+        
+        CartItem existingItem = new CartItem(50, 100, 1, 2);
+        when(cartItemRepository.findByCartIdAndProductId(100, 1)).thenReturn(Optional.of(existingItem));
+        
+        // Sau khi xóa, getCartResponse sẽ trả về giỏ rỗng
+        when(cartItemRepository.findByCartId(100)).thenReturn(Collections.emptyList());
+
+        // Thực thi
+        CartResponse response = cartService.updateQuantity(userId, req);
+
+        // Kiểm chứng
+        verify(cartItemRepository, times(1)).delete(existingItem); // Xác nhận nhánh delete đã chạy
+        verify(cartItemRepository, never()).save(any()); // Đảm bảo không gọi save
+        assertEquals(0, response.getItemsCount());
+    }
 }
+

@@ -1,34 +1,33 @@
 package com.shopcart.entity;
 
-import java.math.BigDecimal;
-
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "cart_items")
 @Data
-@AllArgsConstructor // Tạo Constructor: CartItem(String userId, Long productId, String productName, int quantity)
 @NoArgsConstructor
+@AllArgsConstructor 
 public class CartItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    private String userId;
-    private Long productId;
-    private String productName;
-    private int quantity;
-    private BigDecimal price;
+    @Column(name = "cart_item_id")
+    private Integer id;
 
-    // Constructor bổ sung để khớp với Listing 2 trong hình
-    public CartItem(String userId, Long productId, String productName, BigDecimal price, Integer quantity) {
-        this.userId = userId;
+    @Column(name = "cart_id")
+    private Integer cartId;
+
+    @Column(name = "product_id")
+    private Integer productId; // Phải là Integer
+
+    @Column(nullable = false)
+    private Integer quantity;
+
+    // Constructor thủ công để đảm bảo nhận đúng tham số Integer
+    public CartItem(int id, int cartId, int productId, int quantity) {
+        this.id = id;
+        this.cartId = cartId;
         this.productId = productId;
-        this.productName = productName;
-        this.price = price;
         this.quantity = quantity;
     }
 }

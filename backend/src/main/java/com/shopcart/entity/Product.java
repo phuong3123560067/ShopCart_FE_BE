@@ -1,47 +1,49 @@
 package com.shopcart.entity;
 
-import java.math.BigDecimal;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "products")
 @Data
-@AllArgsConstructor 
+@AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class Product {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
+    @Column(name = "product_id")
+    private Integer id;
+
+    @Column(nullable = false)
     private String name;
-    
-    private BigDecimal price;
-    
+
     private String description;
-    
-    private Long categoryId;
 
-    // Bạn nên chọn một trong hai tên: inventoryQuantity hoặc stock để tránh nhầm lẫn
-    @Column(name = "inventory_quantity")
-    private Integer inventoryQuantity;
+    @Column(nullable = false)
+    private BigDecimal price;
 
-    // HÀM KHỞI TẠO PHẢI NẰM TRONG CẶP NGOẶC NHỌN CỦA CLASS
-    public Product(Long id, String name, Long price, Integer inventoryQuantity) {
-        this.id = id;
-        this.name = name;
-        this.price = java.math.BigDecimal.valueOf(price);
-        this.inventoryQuantity = inventoryQuantity;
-    }
-    // Thêm constructor nhận BigDecimal để linh hoạt hơn
-    public Product(Long id, String name, BigDecimal price, Integer inventoryQuantity) {
+    @Column(name = "stock", nullable = false)
+    private Integer stock; 
+
+    private String status = "Active";
+
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    // Quan hệ ManyToOne phải đi kèm với biến category như thế này:
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category; 
+
+    // Constructor tùy chỉnh (nếu cần cho Test)
+    public Product(Integer id, String name, BigDecimal price, Integer stock) {
         this.id = id;
         this.name = name;
         this.price = price;
-        this.inventoryQuantity = inventoryQuantity;
+        this.stock = stock;
+        this.status = "Active";
     }
 }

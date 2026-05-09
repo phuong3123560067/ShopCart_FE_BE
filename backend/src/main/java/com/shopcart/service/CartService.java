@@ -1,155 +1,168 @@
 package com.shopcart.service;
 
 import com.shopcart.dto.CartItemRequest;
+import com.shopcart.dto.CartItemResponse;
 import com.shopcart.dto.CartResponse;
+import com.shopcart.entity.Cart;
 import com.shopcart.entity.CartItem;
 import com.shopcart.entity.Product;
+import com.shopcart.repository.CartItemRepository;
 import com.shopcart.repository.CartRepository;
 import com.shopcart.repository.ProductRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor // Tự động tạo Constructor cho các final field (thay @Autowired)
 public class CartService {
 
-        @Autowired
-        private ProductRepository productRepository;
+    private final CartItemRepository cartItemRepository;
+    private final ProductRepository productRepository;
+    private final CartRepository cartRepository;
 
-        @Autowired
-        private CartRepository cartRepository;
-        /**
-         * API: POST /api/cart/add
-         */
-        public CartResponse addToCart(String userId, CartItemRequest request) {
-        if (request.getProductId() == null || request.getQuantity() == null || request.getQuantity() <= 0) {
-                return CartResponse.builder()
-                        .success(false)
-                        .message("Số lượng không hợp lệ")
-                        .build();
+    public CartResponse getCartResponse(Integer userId) {
+        Cart cart = cartRepository.findByUserId(userId).orElseGet(() -> {
+            Cart newCart = new Cart();
+            newCart.setUserId(userId);
+            return cartRepository.save(newCart);
+        });
+
+        List<CartItem> cartItems = cartItemRepository.findByCartId(cart.getId());
+        List<CartItemResponse> itemResponses = new ArrayList<>();
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (CartItem item : cartItems) {
+            Product p = productRepository.findById(item.getProductId())
+                    .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại: " + item.getProductId()));
+            
+            BigDecimal subTotal = p.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+            total = total.add(subTotal);
+
+            itemResponses.add(CartItemResponse.builder()
+                    .productId(p.getId())
+                    .productName(p.getName())
+                    .price(p.getPrice())
+                    .quantity(item.getQuantity())
+                    .subTotal(subTotal)
+                    .build());
         }
+
+        return CartResponse.builder()
+                .success(true)
+                .message("Lấy thông tin giỏ hàng thành công")
+                .cartTotal(total)
+                .itemsCount(itemResponses.size())
+                .items(itemResponses)
+                .discountAmount(BigDecimal.ZERO)
+                .build();
+    }
+
+    @Transactional // Thêm Transactional để đảm bảo tính toàn vẹn dữ liệu
+    public CartResponse addToCart(Integer userId, CartItemRequest request) {
+        if (request.getQuantity() == null || request.getQuantity() <= 0) {
+            throw new RuntimeException("Số lượng không hợp lệ");
+        }
+
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseGet(() -> {
+                    Cart newCart = new Cart();
+                    newCart.setUserId(userId);
+                    return cartRepository.save(newCart);
+                });
 
         Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại"));
 
-        if (product.getInventoryQuantity() < request.getQuantity()) {
-                throw new RuntimeException("Sản phẩm không đủ tồn kho");
-        }
-
-        // Tìm hoặc tạo mới CartItem
-        CartItem cartItem = cartRepository.findByUserIdAndProductId(userId, request.getProductId())
-                .orElse(new CartItem(userId, product.getId(), product.getName(), product.getPrice(), 0));
+        // Kiểm tra tồn kho (Nên cộng dồn cả số lượng đang có trong giỏ để kiểm tra)
+        CartItem cartItem = cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId())
+                .orElse(new CartItem(null, cart.getId(), product.getId(), 0));
 
         int newQuantity = cartItem.getQuantity() + request.getQuantity();
-
-        if (product.getInventoryQuantity() < newQuantity) {
-                throw new RuntimeException("Sản phẩm không đủ tồn kho");
+        if (product.getStock() < newQuantity) {
+            throw new RuntimeException("Không đủ tồn kho. Hiện có: " + product.getStock());
         }
 
         cartItem.setQuantity(newQuantity);
-        cartRepository.save(cartItem);
+        cartItemRepository.save(cartItem);
 
-        // Tính tổng tiền giỏ hàng
-        List<CartItem> allItems = cartRepository.findByUserId(userId);
-        double cartTotal = allItems.stream()
-                .mapToDouble(item -> item.getPrice().doubleValue() * item.getQuantity())
-                .sum();
+        CartResponse response = getCartResponse(userId);
+        response.setMessage("Đã thêm " + product.getName() + " vào giỏ hàng");
+        return response;
+    }
 
-        return CartResponse.builder()
-                .success(true)
-                .message("Thêm vào giỏ hàng thành công")
-                .productName(product.getName())
-                .quantity(newQuantity)
-                .price(product.getPrice())
-                .cartTotal(cartTotal)
-                .itemsCount(allItems.size())
-                .discountAmount(0.0)
-                .build();
-        }
-
-    // Các method khác (có thể mở rộng sau)
-        public CartResponse getCart(String userId) {
-        List<CartItem> items = cartRepository.findByUserId(userId);
-        
-        double total = items.stream()
-                .mapToDouble(item -> item.getPrice().doubleValue() * item.getQuantity())
-                .sum();
-
-        return CartResponse.builder()
-                .success(true)
-                .message("Lấy giỏ hàng thành công")
-                .cartTotal(total)
-                .discountAmount(0.0)
-                .itemsCount(items.size())
-                .build();
-        }
-
-        public CartResponse updateQuantity(String userId, CartItemRequest request) {
-        CartItem item = cartRepository.findByUserIdAndProductId(userId, request.getProductId())
-                .orElseThrow(() -> new RuntimeException("Not found"));
-        
-        item.setQuantity(request.getQuantity()); // Cập nhật số lượng mới là 5
-        cartRepository.save(item);
-
-        return CartResponse.builder()
-                .success(true)
-                .quantity(item.getQuantity()) // ĐẢM BẢO DÒNG NÀY CÓ GIÁ TRỊ (5)
-                .message("Updated success")
-                .build();
-        }
-
-        public CartResponse removeFromCart(String userId, Long productId) {
-                CartItem item = cartRepository.findByUserIdAndProductId(userId, productId)
-                        .orElseThrow(() -> new RuntimeException("Product not found"));
-                        
-                cartRepository.delete(item);
+    @Transactional
+    public CartResponse updateQuantity(Integer userId, CartItemRequest req) {
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Lỗi giỏ hàng"));
                 
-                return CartResponse.builder()
-                        .success(true)
-                        .message("Xóa sản phẩm thành công")
-                        .build();
+        CartItem ci = cartItemRepository.findByCartIdAndProductId(cart.getId(), req.getProductId())
+                .orElseThrow(() -> new RuntimeException("Không có sản phẩm trong giỏ"));
+
+        if (req.getQuantity() <= 0) {
+            cartItemRepository.delete(ci);
+        } else {
+            // Kiểm tra stock trước khi update
+            Product p = productRepository.findById(req.getProductId()).get();
+            if (p.getStock() < req.getQuantity()) throw new RuntimeException("Không đủ tồn kho");
+            
+            ci.setQuantity(req.getQuantity());
+            cartItemRepository.save(ci);
         }
 
-        public CartResponse applyCoupon(String userId, String couponCode) {
-        // 1. Lấy danh sách sản phẩm
-        List<CartItem> items = cartRepository.findByUserId(userId);
+        CartResponse response = getCartResponse(userId);
+        response.setMessage("Cập nhật thành công");
+        return response;
+    }
+
+    @Transactional
+    public CartResponse removeFromCart(Integer userId, Integer productId) {
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Giỏ hàng không tồn tại"));
+
+        CartItem item = cartItemRepository.findByCartIdAndProductId(cart.getId(), productId)
+                .orElseThrow(() -> new RuntimeException("Sản phẩm không có trong giỏ hàng"));
+
+        cartItemRepository.delete(item);
+
+        CartResponse response = getCartResponse(userId);
+        response.setMessage("Xóa sản phẩm thành công");
+        return response;
+    }
+
+    public CartResponse applyCoupon(Integer userId, String code) {
+        CartResponse res = getCartResponse(userId);
+        BigDecimal total = res.getCartTotal();
         
-        // 2. Tính subTotal bằng BigDecimal (Sửa lỗi toán tử * và +)
-        BigDecimal subTotal = items.stream()
-                .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        // 3. Giả định discount (Nên để BigDecimal để đồng bộ)
-        BigDecimal discount = new BigDecimal("500000.0"); 
-        
-        // 4. Tính newTotal (Sửa lỗi toán tử -)
-        BigDecimal newTotal = subTotal.subtract(discount);
-        if (newTotal.compareTo(BigDecimal.ZERO) < 0) {
-                newTotal = BigDecimal.ZERO;
+        BigDecimal discount = BigDecimal.ZERO;
+        if ("GIAM500K".equals(code) && total.compareTo(new BigDecimal("1000000")) >= 0) {
+            discount = new BigDecimal("500000");
         }
 
-        // 5. Trả về kết quả (Chuyển về double để khớp với DTO nếu DTO dùng double)
-        return CartResponse.builder()
-                .success(true)
-                .message("Áp dụng mã giảm giá thành công")
-                .cartTotal(newTotal.doubleValue()) 
-                .discountAmount(discount.doubleValue())
-                .itemsCount(items.size())
-                .build();
-        }
-        public CartResponse removeCoupon(String token) {
-                return CartResponse.builder()
-                        .success(true)
-                        .message("Đã hủy mã giảm giá")
-                        .cartTotal(0.0)
-                        .discountAmount(0.0)
-                        .build();
-        }
+        // Đảm bảo cartTotal sau giảm giá không âm
+        BigDecimal finalTotal = total.subtract(discount);
+        if (finalTotal.compareTo(BigDecimal.ZERO) < 0) finalTotal = BigDecimal.ZERO;
 
-    // Sửa String thành Long để khớp với Repository và bài Test
-// Sửa String thành Long để khớp với Repository và bài Test
+        res.setDiscountAmount(discount);
+        res.setCartTotal(finalTotal);
+        res.setMessage(discount.compareTo(BigDecimal.ZERO) > 0 ? "Áp dụng mã thành công" : "Mã không khả dụng");
+        return res;
+    }
 
+    public CartResponse removeCoupon(Integer userId) {
+        CartResponse res = getCartResponse(userId);
+        res.setDiscountAmount(BigDecimal.ZERO);
+        res.setMessage("Đã hủy mã giảm giá");
+        return res;
+    }
+
+    public void checkout(Integer cartId) {
+        if (cartItemRepository.findByCartId(cartId).isEmpty()) {
+            throw new RuntimeException("Giỏ hàng đang trống, không thể thanh toán");
+        }
+    }
 }

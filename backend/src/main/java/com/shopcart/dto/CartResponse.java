@@ -1,22 +1,22 @@
 package com.shopcart.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.*;
 import java.math.BigDecimal;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.util.List;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class CartResponse { // Đảm bảo CÓ từ khóa 'class' ở đây
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class CartResponse {
     private boolean success;
     private String message;
-    private Double cartTotal;
-    private Double discountAmount;
-    private Integer itemsCount;
-    private BigDecimal price;
-    private String productName;
-    private Integer quantity;
+    private BigDecimal cartTotal;
+    private int itemsCount;
+    private BigDecimal discountAmount;
+    private List<CartItemResponse> items; // Giữ lại cái này để show toàn bộ
+
 }

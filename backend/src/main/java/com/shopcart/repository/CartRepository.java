@@ -1,16 +1,20 @@
 package com.shopcart.repository;
 
-import com.shopcart.entity.CartItem;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import com.shopcart.entity.Cart;
 
-import java.util.List;
+import jakarta.transaction.Transactional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+
 import java.util.Optional;
 
-@Repository
-public interface CartRepository extends JpaRepository<CartItem, Long> {
-    // Thêm hàm này để lấy danh sách giỏ hàng của một người dùng
-    List<CartItem> findByUserId(String userId);
-
-    Optional<CartItem> findByUserIdAndProductId(String userId, Long productId);
+// Đổi từ Long thành Integer để khớp với Cart Entity mới
+public interface CartRepository extends JpaRepository<Cart, Integer> { 
+    Optional<Cart> findByUserId(Integer userId);
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Cart c WHERE c.userId = :userId")
+    void deleteByUserId(Integer userId);
 }
