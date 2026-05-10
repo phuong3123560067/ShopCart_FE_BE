@@ -41,26 +41,25 @@ class CartControllerIntegrationTest {
     private ObjectMapper objectMapper;
 
         @Test
-    @WithMockUser(username = "testuser", roles = {"USER"}) // THÊM DÒNG NÀY
+    @WithMockUser(username = "testuser", roles = {"USER"}) // giả lập người dùng
     @DisplayName("POST /api/cart/add - Thêm vào giỏ thành công")
     void testAddToCartSuccess() throws Exception {
-        // SỬA: Dùng Integer 1 thay vì 1L để khớp với CartItemRequest(Integer, Integer)
-        CartItemRequest request = new CartItemRequest(1, 2); 
-        
+        // 1. Giả định dữ liệu đầu vào và kết quả mong muốn
+        CartItemRequest request = new CartItemRequest(1, 2);      
         CartResponse mockResponse = CartResponse.builder()
                 .success(true)
                 .message("Them vao gio hang thanh cong")
-                // SỬA LỖI TẠI ĐÂY: Chuyển double sang BigDecimal
                 .cartTotal(new BigDecimal("30000000")) 
                 .build();
 
-        // Mock Service: Dùng any(Integer.class) để khớp với (Integer, CartItemRequest)
+        // 2. Ra lệnh cho máy: "Khi gọi Service, hãy trả về outputFake"
         when(cartService.addToCart(any(Integer.class), any(CartItemRequest.class))).thenReturn(mockResponse);
-
+        // 3. Giả vờ bấm nút gửi yêu cầu lên Server
         mockMvc.perform(post("/api/cart/add")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
+                // 4. Chốt đơn: Nếu kết quả trả về là 'true' thì bài Test ĐẠT
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
     }

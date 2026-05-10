@@ -15,4 +15,8 @@ public class OrderResponse {
     private OrderStatus status; // Kiểu Enum thay vì String
     private String message;
     private Long totalPrice; // Thêm trường này nếu Test yêu cầu
+
+    private java.math.BigDecimal finalPrice; 
+    private String phoneNumber;
+    private String shippingAddress;
 }

@@ -89,9 +89,35 @@ public class OrderService {
                 .build();
     }
 
-    public Order getOrderById(Integer id) {
-        // Bây giờ 'id' là Integer, khớp hoàn toàn với Repository<Order, Integer>
-        return orderRepository.findById(id) 
-            .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng: " + id));
+    public OrderResponse getOrderById(Integer id) {
+        Order order = orderRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
+
+        OrderResponse response = new OrderResponse();
+        
+        // 1. Chuyển Integer sang String cho OrderId
+        response.setOrderId(String.valueOf(order.getId()));
+
+        // 2. Chuyển String sang Enum OrderStatus (Xử lý lỗi Type mismatch Status)
+        if (order.getStatus() != null) {
+            try {
+                response.setStatus(OrderStatus.valueOf(order.getStatus().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                response.setStatus(OrderStatus.PENDING); // Mặc định nếu không khớp
+            }
+        }
+
+        // 3. Chuyển BigDecimal sang Long cho TotalPrice
+        if (order.getTotalPrice() != null) {
+            response.setTotalPrice(order.getTotalPrice().longValue());
+        }
+
+        // 4. Các trường còn lại (Đảm bảo DTO đã khai báo các trường này)
+        response.setFinalPrice(order.getFinalPrice()); 
+        response.setPhoneNumber(order.getPhoneNumber());
+        response.setShippingAddress(order.getShippingAddress());
+        response.setMessage("Lấy thông tin đơn hàng thành công");
+        
+        return response;
     }
 }
