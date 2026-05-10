@@ -415,5 +415,19 @@ void testUpdateQuantitySuccess() {
         verify(cartItemRepository, never()).save(any()); // Đảm bảo không gọi save
         assertEquals(0, response.getItemsCount());
     }
+
+    @DisplayName("Checkout thành công khi có sản phẩm")
+    void testCheckout_WithItems_ShouldSucceed() {
+        // 1. Given: Giả lập giỏ hàng có sản phẩm
+        Integer cartId = 1;
+        List<CartItem> mockItems = List.of(new CartItem());
+        when(cartItemRepository.findByCartId(cartId)).thenReturn(mockItems);
+
+        // 2. When: Gọi hàm checkout
+        cartService.checkout(cartId);
+
+        // 3. Then: Xác nhận nhánh FALSE (không trống) đã chạy
+        verify(cartItemRepository).findByCartId(cartId);
+    }
 }
 
