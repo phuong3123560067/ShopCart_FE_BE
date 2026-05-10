@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @Builder
 public class Product {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "product_id")
@@ -26,8 +26,8 @@ public class Product {
     private BigDecimal price;
 
     @Column(name = "stock", nullable = false)
-    private Integer stock; 
-
+    private Integer stock;
+    @Builder.Default
     private String status = "Active";
 
     @Column(name = "image_url")
@@ -36,7 +36,7 @@ public class Product {
     // Quan hệ ManyToOne phải đi kèm với biến category như thế này:
     @ManyToOne
     @JoinColumn(name = "category_id")
-    private Category category; 
+    private Category category;
 
     // Constructor tùy chỉnh (nếu cần cho Test)
     public Product(Integer id, String name, BigDecimal price, Integer stock) {

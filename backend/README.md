@@ -63,19 +63,14 @@
 ```
 .\mvnw.cmd spring-boot:run
 ```
-- Giải thích: Khởi động ứng dụng tại cổng mặc định (port 3030). 
-http://localhost:3030
+- Giải thích: Khởi động ứng dụng tại cổng mặc định (port 3000). 
+http://localhost:3000
 - **3. Cách test trực tiếp trên Postman**
 - chạy lệnh 
 ```
 .\mvnw.cmd spring-boot:run và mở postman
 ```
-- Nếu đã có một tài khoản user trong database, không cần sửa code mà làm như sau trong Postman:
-- Dưới ô nhập link ở giữa, chọn tab Authorization.
-- Ở mục Type, chọn Basic Auth.
-- Nhập Username và Password của tài khoản vào 2 ô hiện ra.
-- Nhập link http://localhost:3030/api/test-data
-- Nhấn Send để xem kết quả.
+
 
 - **4. Khi triển khai (Deploy)**
 - Đóng gói sản phẩm (Build JAR):
