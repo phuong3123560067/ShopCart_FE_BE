@@ -23,8 +23,9 @@ public class CartItem {
     @Column(nullable = false)
     private Integer quantity;
 
+    private java.math.BigDecimal price;
     // Constructor thủ công để đảm bảo nhận đúng tham số Integer
-    public CartItem(int id, int cartId, int productId, int quantity) {
+    public CartItem(Integer id, Integer cartId, Integer productId, Integer quantity) {
         this.id = id;
         this.cartId = cartId;
         this.productId = productId;

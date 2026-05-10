@@ -80,7 +80,13 @@ public class CartService {
 
         // Kiểm tra tồn kho (Nên cộng dồn cả số lượng đang có trong giỏ để kiểm tra)
         CartItem cartItem = cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId())
-                .orElse(new CartItem(null, cart.getId(), product.getId(), 0));
+                .orElseGet(() -> {
+                    CartItem newItem = new CartItem();
+                    newItem.setCartId(cart.getId());
+                    newItem.setProductId(product.getId());
+                    newItem.setQuantity(0);
+                    return newItem;     
+                });
 
         int newQuantity = cartItem.getQuantity() + request.getQuantity();
         if (product.getStock() < newQuantity) {

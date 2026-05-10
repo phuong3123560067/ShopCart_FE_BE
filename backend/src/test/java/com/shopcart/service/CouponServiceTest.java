@@ -195,4 +195,73 @@ public class CouponServiceTest {
         assertEquals(5, result.getUsedCount());
         assertFalse(result.getIsActive());
     }
+    @Test
+    @DisplayName("Validate: Mã không tồn tại")
+    void validate_CodeNotFound_ThrowsException() {
+        when(couponRepository.findByCode("INVALID")).thenReturn(Optional.empty());
+        
+        assertThrows(RuntimeException.class, () -> couponService.validate("INVALID", BigDecimal.valueOf(1000)));
+    }
+
+    @Test
+    @DisplayName("Validate: Mã bị khóa ")
+    void validate_CouponInactive_ThrowsException() {
+        Coupon coupon = new Coupon();
+        coupon.setIsActive(false); // Hoặc set null để test nhánh null
+        when(couponRepository.findByCode("LOCK")).thenReturn(Optional.of(coupon));
+
+        assertThrows(RuntimeException.class, () -> couponService.validate("LOCK", BigDecimal.valueOf(1000)));
+    }
+
+    @Test
+    @DisplayName("Validate: Hết lượt dùng")
+    void validate_UsageLimitReached_ThrowsException() {
+        Coupon coupon = new Coupon();
+        coupon.setIsActive(true);
+        coupon.setUsageLimit(10);
+        coupon.setUsedCount(10); // Đã dùng hết 10/10
+        when(couponRepository.findByCode("FULL")).thenReturn(Optional.of(coupon));
+
+        assertThrows(RuntimeException.class, () -> couponService.validate("FULL", BigDecimal.valueOf(1000)));
+    }
+
+    @Test
+    @DisplayName("Validate: Hết hạn")
+    void validate_CouponExpired_ThrowsException() {
+        Coupon coupon = new Coupon();
+        coupon.setIsActive(true);
+        coupon.setExpiryDate(LocalDateTime.now().minusDays(1)); // Đã hết hạn từ hôm qua
+        when(couponRepository.findByCode("EXPIRED")).thenReturn(Optional.of(coupon));
+
+        assertThrows(RuntimeException.class, () -> couponService.validate("EXPIRED", BigDecimal.valueOf(1000)));
+    }
+
+    @Test
+    @DisplayName("Validate: Chưa đủ giá trị tối thiểu")
+    void validate_InsufficientOrderValue_ThrowsException() {
+        Coupon coupon = new Coupon();
+        coupon.setIsActive(true);
+        coupon.setMinOrderValue(BigDecimal.valueOf(500000)); // Yêu cầu 500k
+        when(couponRepository.findByCode("MIN500")).thenReturn(Optional.of(coupon));
+
+        // Test với đơn hàng chỉ 200k
+        assertThrows(RuntimeException.class, () -> couponService.validate("MIN500", BigDecimal.valueOf(200000)));
+    }
+
+    @Test
+    @DisplayName("Validate: Thành công (Happy Path)")
+    void validate_Success_ShouldNotThrowException() {
+        Coupon coupon = new Coupon();
+        coupon.setIsActive(true);
+        coupon.setUsageLimit(100);
+        coupon.setUsedCount(0);
+        coupon.setExpiryDate(LocalDateTime.now().plusDays(10));
+        coupon.setMinOrderValue(BigDecimal.valueOf(100000));
+        when(couponRepository.findByCode("SUCCESS")).thenReturn(Optional.of(coupon));
+
+        // Không ném lỗi là thành công
+        assertDoesNotThrow(() -> couponService.validate("SUCCESS", BigDecimal.valueOf(200000)));
+    }
+
+    
 }
