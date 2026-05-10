@@ -71,4 +71,4 @@ class OrderControllerIntegrationTest {
                 .andExpect(jsonPath("$.orderId").value("ORD-001"))
                 .andExpect(jsonPath("$.totalPrice").value(30050000));
     }
-}
+}       

@@ -5,11 +5,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -120,5 +122,45 @@ public class OrderServiceTest {
         });
 
         assertEquals("Không tìm thấy đơn hàng: 999", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Tạo đơn hàng khi giỏ hàng trống - Bao lỗi")
+    void testCreateOrder_EmptyCart() {
+        // GIVEN
+        OrderRequest request = new OrderRequest();
+        request.setUserId(123);
+        
+        Cart mockCart = new Cart();
+        mockCart.setId(100);
+        when(cartRepository.findByUserId(123)).thenReturn(Optional.of(mockCart));
+
+        // Giả lập findByCartId trả về danh sách rỗng (Empty List)
+        when(cartItemRepository.findByCartId(100)).thenReturn(Collections.emptyList());
+
+        // WHEN & THEN
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            orderService.createOrder(request);
+        });
+
+        assertEquals("Giỏ hàng trống", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName(" Test getOrderById với Status lạ - Trả về PENDING")
+    void testGetOrderById_InvalidStatus() {
+        // GIVEN
+        Order order = new Order();
+        order.setId(1);
+        order.setStatus("STATUS_KHONG_TON_TAI"); // Gây lỗi IllegalArgumentException trong try-catch
+        order.setTotalPrice(new BigDecimal("100000"));
+        when(orderRepository.findById(1)).thenReturn(Optional.of(order));
+
+        // WHEN
+        OrderResponse response = orderService.getOrderById(1);
+        
+        // THEN
+        assertEquals(OrderStatus.PENDING, response.getStatus()); // Kiểm tra xem catch có hoạt động không
+        assertEquals("1", response.getOrderId());
     }
 }

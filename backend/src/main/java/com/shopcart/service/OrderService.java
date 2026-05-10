@@ -92,7 +92,7 @@ public class OrderService {
 
     public OrderResponse getOrderById(Integer id) {
         Order order = orderRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng: " + id));
 
         OrderResponse response = new OrderResponse();
         
