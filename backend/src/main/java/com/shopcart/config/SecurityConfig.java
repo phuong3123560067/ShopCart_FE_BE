@@ -34,7 +34,8 @@ public class SecurityConfig {
 
 
                         .requestMatchers("/api/cart/**").hasAnyAuthority("ROLE_CUSTOMER", "CUSTOMER")
-                        .requestMatchers("/api/orders/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/orders").hasAnyAuthority("ROLE_CUSTOMER", "CUSTOMER")
+                        .requestMatchers(HttpMethod.GET, "/api/orders/**").authenticated()
 
 
 
