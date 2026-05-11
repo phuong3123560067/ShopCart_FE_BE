@@ -10,7 +10,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/inventory")
 @CrossOrigin(origins = "http://localhost:3000")
-public class InventoryController { // Đã sửa tên class cho đúng chính tả
+public class InventoryController {
 
     @Autowired
     private InventoryService inventoryService;
@@ -33,7 +33,6 @@ public class InventoryController { // Đã sửa tên class cho đúng chính t�
         return ResponseEntity.ok(inventoryService.updateStock(productId, stock));
     }
 
-    // Quan trọng: Chuyển các ngoại lệ logic thành mã lỗi 400 để pass Integration Test
     @ExceptionHandler({RuntimeException.class, IllegalArgumentException.class})
     public ResponseEntity<String> handleLogicErrors(RuntimeException ex) {
         return ResponseEntity.status(400).body(ex.getMessage());

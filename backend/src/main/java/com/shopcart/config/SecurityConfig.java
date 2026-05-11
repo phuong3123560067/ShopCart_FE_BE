@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -25,35 +26,49 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // CỰC KỲ QUAN TRỌNG: Cho phép cả FORWARD và INCLUDE đến đường dẫn lỗi
+                        .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.FORWARD, jakarta.servlet.DispatcherType.ERROR).permitAll()
+                        .requestMatchers("/error").permitAll()
 
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
 
-
                         .requestMatchers("/api/cart/**").hasAnyAuthority("ROLE_CUSTOMER", "CUSTOMER")
-                        .requestMatchers(HttpMethod.POST, "/api/orders").hasAnyAuthority("ROLE_CUSTOMER", "CUSTOMER")
-                        .requestMatchers(HttpMethod.GET, "/api/orders/**").authenticated()
-
-
+                        .requestMatchers("/api/orders/**").hasAnyAuthority("ROLE_CUSTOMER", "CUSTOMER")
 
                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
-
-
-                        // Quản lý kho (Inventory) mặc định cho ADMIN
                         .requestMatchers("/api/inventory/**").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
-
 
                         .requestMatchers("/api/auth/logout").authenticated()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+                            Object errorAttr = request.getAttribute("jakarta.servlet.error.exception");
+                            if (errorAttr == null) {
+                                errorAttr = request.getAttribute("javax.servlet.error.exception");
+                            }
+
                             response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("{\"status\": 401, \"message\": \"Lỗi xác thực: Token sai hoặc không có quyền.\"}");
+
+
+                            String errorStr = (errorAttr != null) ? errorAttr.toString() : "";
+
+                            if (errorStr.contains("RuntimeException") || errorStr.contains("L?i")) {
+                                response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // Ép về 400
+                                response.getWriter().write("{\"status\": 400, \"error\": \"Bad Request\", \"message\": \"Thao tác thất bại: Dữ liệu không hợp lệ hoặc không tìm thấy.\"}");
+                            } else {
+
+                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                response.getWriter().write("{\"status\": 401, \"error\": \"Unauthorized\", \"message\": \"Bạn cần đăng nhập để thực hiện thao tác này.\"}");
+                            }
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"status\": 403, \"error\": \"Forbidden\", \"message\": \"Bạn không có quyền truy cập vào tài nguyên này.\"}");
                         })
                 );
 

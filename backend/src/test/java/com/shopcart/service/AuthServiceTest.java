@@ -48,7 +48,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("Đăng ký: Lỗi Email đã tồn tại (Phủ dòng 33-34)")
+    @DisplayName("Đăng ký: Lỗi Email đã tồn tại")
     void registerUser_EmailExists() {
         RegisterRequest request = new RegisterRequest("admin@shopcart.com", "123", "Admin");
         when(userRepository.findByEmail("admin@shopcart.com")).thenReturn(Optional.of(new User()));
@@ -58,7 +58,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("Đăng ký: Lỗi không tìm thấy Role mặc định (Phủ dòng 42-43)")
+    @DisplayName("Đăng ký: Lỗi không tìm thấy Role mặc định")
     void registerUser_RoleNotFound() {
         RegisterRequest request = new RegisterRequest("new@gmail.com", "123", "User");
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
@@ -72,14 +72,15 @@ class AuthServiceTest {
     void authenticateUser_Success() {
         LoginRequest request = new LoginRequest("user@gmail.com", "user123");
 
-        Role mockRole = new Role(1, "ADMIN"); // Test cả nhánh roleName.startsWith("ROLE_")
+        Role mockRole = new Role(1, "ADMIN");
         User mockUser = new User();
+        mockUser.setUserId(1);
         mockUser.setEmail("user@gmail.com");
         mockUser.setPassword("user123");
         mockUser.setRole(mockRole);
 
         when(userRepository.findByEmail("user@gmail.com")).thenReturn(Optional.of(mockUser));
-        when(tokenProvider.generateToken(anyString(), anyString())).thenReturn("mock-token");
+        when(tokenProvider.generateToken(any(), anyString(), anyString())).thenReturn("mock-token");
 
         AuthResponse response = authService.authenticateUser(request);
 
@@ -89,26 +90,27 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("Đăng nhập: Thành công với Role không có tiền tố ROLE_ (Phủ dòng 56-58)")
+    @DisplayName("Đăng nhập: Thành công với Role không có tiền tố ROLE_")
     void authenticateUser_Success_AddPrefix() {
         LoginRequest request = new LoginRequest("user@gmail.com", "user123");
 
         Role mockRole = new Role(2, "CUSTOMER"); // Không có tiền tố ROLE_
         User mockUser = new User();
+        mockUser.setUserId(2);
         mockUser.setEmail("user@gmail.com");
         mockUser.setPassword("user123");
         mockUser.setRole(mockRole);
 
         when(userRepository.findByEmail("user@gmail.com")).thenReturn(Optional.of(mockUser));
-        when(tokenProvider.generateToken(anyString(), eq("ROLE_CUSTOMER"))).thenReturn("token-with-prefix");
+        when(tokenProvider.generateToken(any(), anyString(), eq("ROLE_CUSTOMER"))).thenReturn("token-with-prefix");
 
         authService.authenticateUser(request);
 
-        verify(tokenProvider).generateToken(anyString(), eq("ROLE_CUSTOMER"));
+        verify(tokenProvider).generateToken(any(), anyString(), eq("ROLE_CUSTOMER"));
     }
 
     @Test
-    @DisplayName("Đăng nhập: Lỗi Email không tồn tại (Phủ dòng 49)")
+    @DisplayName("Đăng nhập: Lỗi Email không tồn tại")
     void authenticateUser_EmailNotFound() {
         LoginRequest request = new LoginRequest("unknown@gmail.com", "123");
         when(userRepository.findByEmail("unknown@gmail.com")).thenReturn(Optional.empty());
@@ -118,7 +120,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("Đăng nhập: Lỗi sai mật khẩu (Phủ dòng 52)")
+    @DisplayName("Đăng nhập: Lỗi sai mật khẩu")
     void authenticateUser_WrongPassword() {
         LoginRequest request = new LoginRequest("user@gmail.com", "wrong_pass");
         User mockUser = new User();
@@ -131,14 +133,14 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("Đăng xuất: Thành công (Phủ luồng chính)")
+    @DisplayName("Đăng xuất: Thành công")
     void logout_Success() {
         String result = authService.logout("Bearer valid-token");
         assertEquals("Đăng xuất thành công!", result);
     }
 
     @Test
-    @DisplayName("Đăng xuất: Lỗi Token sai định dạng (Phủ dòng 67-68)")
+    @DisplayName("Đăng xuất: Lỗi Token sai định dạng")
     void logout_InvalidToken() {
         // Case 1: Token null
         assertThrows(RuntimeException.class, () -> authService.logout(null));

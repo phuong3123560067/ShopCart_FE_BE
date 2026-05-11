@@ -105,7 +105,7 @@ public class ProductServiceTest {
         productService.updateProduct(1, request);
 
         assertEquals("Partial Update", activeProduct.getName());
-        assertEquals(BigDecimal.valueOf(100), activeProduct.getPrice()); // Price vẫn giữ nguyên
+        assertEquals(BigDecimal.valueOf(100), activeProduct.getPrice());
     }
 
     @Test
