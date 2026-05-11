@@ -25,20 +25,35 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Yêu cầu đăng nhập mới được logout
-                        .requestMatchers("/api/auth/logout").authenticated()
 
-                        // Cho phép xem sản phẩm thoải mái
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
 
-                        // Chỉ Admin mới được sửa sản phẩm và kho
-                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers("/api/inventory/**").hasRole("ADMIN")
 
+                        .requestMatchers("/api/cart/**").hasAnyAuthority("ROLE_CUSTOMER", "CUSTOMER")
+                        .requestMatchers("/api/orders/**").permitAll()
+
+
+
+                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
+
+
+                        // Quản lý kho (Inventory) mặc định cho ADMIN
+                        .requestMatchers("/api/inventory/**").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
+
+
+                        .requestMatchers("/api/auth/logout").authenticated()
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"status\": 401, \"message\": \"Lỗi xác thực: Token sai hoặc không có quyền.\"}");
+                        })
                 );
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

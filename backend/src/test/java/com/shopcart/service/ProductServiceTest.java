@@ -60,7 +60,7 @@ public class ProductServiceTest {
     void testUpdateProduct_FullUpdate() {
         ProductUpdateRequest request = new ProductUpdateRequest();
         request.setName("New Name");
-        request.setStock(0); // Test logic tự động chuyển Inactive
+        request.setStock(0);
 
         when(productRepository.findById(1)).thenReturn(Optional.of(activeProduct));
         when(productRepository.save(any(Product.class))).thenReturn(activeProduct);
@@ -68,13 +68,13 @@ public class ProductServiceTest {
         ProductResponse result = productService.updateProduct(1, request);
 
         assertEquals("New Name", activeProduct.getName());
-        assertEquals("Inactive", activeProduct.getStatus()); // Đã phủ dòng 63-65 trong ProductService.java
+        assertEquals("Inactive", activeProduct.getStatus());
     }
 
     @Test
     void testGetFeaturedProducts() {
         Product p1 = new Product(); p1.setStock(15); p1.setStatus("Active");
-        Product p2 = new Product(); p2.setStock(5); p2.setStatus("Active"); // Sẽ bị loại bởi filter stock > 10
+        Product p2 = new Product(); p2.setStock(5); p2.setStatus("Active");
 
         when(productRepository.findByStatus("Active")).thenReturn(Arrays.asList(p1, p2));
 
@@ -90,12 +90,12 @@ public class ProductServiceTest {
         when(productRepository.findByStatus("Active")).thenReturn(Arrays.asList(p1, p2));
 
         List<ProductResponse> result = productService.getBestSellers();
-        // Kiểm tra logic sort tăng dần theo stock (dòng 82 ProductService.java)
+
         assertEquals(10, result.get(0).getStock());
     }
     @Test
     void testUpdateProduct_PartialUpdate() {
-        // Chỉ update name, các trường khác để null để phủ các dòng check null if(request.get... != null)
+
         ProductUpdateRequest request = new ProductUpdateRequest();
         request.setName("Partial Update");
 
@@ -110,7 +110,7 @@ public class ProductServiceTest {
 
     @Test
     void testMapToResponse_WithCategoryNull() {
-        activeProduct.setCategory(null); // Phủ nhánh "Uncategorized" dòng 29
+        activeProduct.setCategory(null);
         when(productRepository.findById(1)).thenReturn(Optional.of(activeProduct));
 
         ProductResponse res = productService.getProductById(1);
