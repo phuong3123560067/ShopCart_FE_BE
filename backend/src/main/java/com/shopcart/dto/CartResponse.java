@@ -17,6 +17,6 @@ public class CartResponse {
     private BigDecimal cartTotal;
     private int itemsCount;
     private BigDecimal discountAmount;
-    private List<CartItemResponse> items; // Giữ lại cái này để show toàn bộ
+    private List<CartItemResponse> items;
 
 }

@@ -1,50 +1,60 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
-// 1. Dùng mảng token bạn đã có
-const tokenList = ["eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf","eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ1c2VyQGdtYWlsLmNvbSIsInJvbGUiOiJST0xFX0NVU1RPTUVSIiwiaWF0IjoxNzc4NDgyMTk0LCJleHAiOjE3Nzg0ODU3OTR9.wHtd6Pf1aFhThyB4hXJAH6LBn5XAie_rOXmgmgJM93AW_-vlqJ1UWruLbCnylhHf"];
-
 export const options = {
   vus: 50,
   duration: '30s',
 };
 
 export default function () {
-  const token = tokenList.length > 1 ? tokenList[__VU - 1] : tokenList[0];
-  const userId = 1 + __VU; // Mỗi người dùng một ID khác nhau (giả định DB đã có user từ 2-51)
+  const loginUrl = 'http://localhost:3000/api/auth/login';
+  const loginPayload = JSON.stringify({
+    email: `user${__VU}@gmail.com`,
+    password: "user123",
+  });
+
+  const loginRes = http.post(loginUrl, loginPayload, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  const loginOk = check(loginRes, {
+    'Login successful': (r) => r.status === 200 || r.status === 201,
+  });
+
+  if (!loginOk) return;
+
+  const token = loginRes.json('token');
+  const currentUserId = __VU + 2;
 
   const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`,
   };
 
-  // --- BƯỚC A: TỰ THÊM HÀNG VÀO GIỎ (GIẢ ĐỊNH SP ID = 1) ---
-  // Bước này đảm bảo mỗi user đều có hàng để mà đặt
-  const addToCartPayload = JSON.stringify({
-    userId: userId,
-    productId: 1, // Laptop Dell G15 trong data.sql của bạn
+
+  const addRes = http.post('http://localhost:3000/api/cart/add', JSON.stringify({
+    productId: 1,
     quantity: 1
+  }), { headers });
+
+  const addOk = check(addRes, {
+    'Added to cart': (r) => r.status === 200 || r.status === 201,
   });
 
-  // Gọi API thêm vào giỏ (Sửa lại URL nếu API của bạn khác)
-  http.post('http://localhost:3000/api/cart/add', addToCartPayload, { headers });
 
-  // Nghỉ một chút để DB kịp xử lý
-  sleep(0.5);
+  if (addOk) {
+    const orderPayload = JSON.stringify({
+      userId: currentUserId,
+      shippingAddress: "97 Võ Văn Tần, Quận 3, TP.HCM",
+      phoneNumber: "0901234567"
+    });
 
-  // --- BƯỚC B: TIẾN HÀNH ĐẶT HÀNG ---
-  const orderPayload = JSON.stringify({
-    userId: userId,
-    shippingAddress: `Địa chỉ User ${userId}`,
-    phoneNumber: `0900000${__VU}`
-  });
+    const orderRes = http.post('http://localhost:3000/api/orders', orderPayload, { headers });
 
-  const res = http.post('http://localhost:3000/api/orders', orderPayload, { headers });
-
-  // Kiểm tra kết quả
-  check(res, {
-    'Đặt hàng thành công (201)': (r) => r.status === 201,
-  });
+    check(orderRes, {
+      'Order created (201)': (r) => r.status === 201,
+    });
+  }
 
   sleep(1);
 }

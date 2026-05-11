@@ -61,10 +61,9 @@ public class AuthService {
             roleName = "ROLE_" + roleName;
         }
 
-        // 4. Tạo JWT Token
-        String token = tokenProvider.generateToken(user.getEmail(), roleName);
+        String token = tokenProvider.generateToken(Long.valueOf(user.getUserId()), user.getEmail(), roleName);
 
-        return new AuthResponse(token, user.getEmail(), user.getRole().getRoleName());
+        return new AuthResponse(token, user.getEmail(), user.getRole().getRoleName(), user.getUserId());
     }
 
     public String logout(String token) {

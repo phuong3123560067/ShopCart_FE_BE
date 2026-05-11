@@ -70,4 +70,34 @@ public class ProductControllerIntegrationTest {
                         .content("{\"name\":\"Hack\"}"))
                 .andExpect(status().isForbidden()); // Trả về 403 Forbidden
     }
+    @Test
+    @DisplayName("Controller: Lấy tất cả sản phẩm - Thành công")
+    void testGetAllProducts_Success() throws Exception {
+        mockMvc.perform(get("/api/products"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Controller: Lấy sản phẩm - Thất bại (404)")
+    void testGetProduct_NotFound() throws Exception {
+        when(productService.getProductById(999)).thenThrow(new RuntimeException("Không tìm thấy sản phẩm"));
+
+        mockMvc.perform(get("/api/products/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Không tìm thấy sản phẩm"));
+    }
+
+    @Test
+    @DisplayName("Controller: Cập nhật sản phẩm - Lỗi BadRequest (400)")
+    @WithMockUser(roles = "ADMIN")
+    void testUpdateProduct_BadRequest() throws Exception {
+        ProductUpdateRequest request = new ProductUpdateRequest();
+        when(productService.updateProduct(eq(1), any())).thenThrow(new RuntimeException("Dữ liệu không hợp lệ"));
+
+        mockMvc.perform(put("/api/products/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Dữ liệu không hợp lệ"));
+    }
 }

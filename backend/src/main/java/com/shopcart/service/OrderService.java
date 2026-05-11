@@ -29,13 +29,13 @@ public class OrderService {
 
     @Transactional 
     public OrderResponse createOrder(OrderRequest request) {
-        // 1. Xử lý UserId: Lấy trực tiếp từ request (giả định request.getUserId() trả về Integer hoặc String)
+
         Integer userIdInt;
         
         // Nếu request.getUserId() trả về String (ví dụ " 123 ")
         // userIdInt = Integer.parseInt(request.getUserId().trim());
-        
-        // Nếu request.getUserId() đã là Integer, chỉ cần gán thẳng:
+
+
         userIdInt = request.getUserId();
 
         // 2. Tìm Giỏ hàng và các mặt hàng
@@ -52,30 +52,30 @@ public class OrderService {
         order.setUserId(userIdInt);
         order.setShippingAddress(request.getShippingAddress());
         order.setPhoneNumber(request.getPhoneNumber());
-        order.setStatus(OrderStatus.PENDING.name()); // Lưu "PENDING" vào DB (String)
-        
+        order.setStatus(OrderStatus.PENDING.name());
+
         BigDecimal total = BigDecimal.ZERO;
         for (CartItem item : items) {
             Product product = productRepository.findById(item.getProductId())
                 .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại"));
-            
+
             // Kiểm tra tồn kho trước khi trừ
             if (product.getStock() < item.getQuantity()) {
                 throw new RuntimeException("Sản phẩm " + product.getName() + " không đủ tồn kho");
             }
-            
+
             // Trừ kho và lưu lại
             product.setStock(product.getStock() - item.getQuantity());
-            productRepository.save(product); 
+            productRepository.save(product);
 
             BigDecimal itemTotal = product.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
             total = total.add(itemTotal);
         }
-        
+
         // 4. Thiết lập giá trị tiền tệ
         order.setTotalPrice(total);
-        order.setFinalPrice(total); 
-        
+        order.setFinalPrice(total);
+
         Order savedOrder = orderRepository.save(order);
 
         // 5. Làm sạch giỏ hàng sau khi đặt hàng
@@ -84,8 +84,11 @@ public class OrderService {
 
         return OrderResponse.builder()
                 .orderId(savedOrder.getId().toString())
-                // Chuyển String từ DB về Enum cho Response
-                .status(OrderStatus.valueOf(savedOrder.getStatus())) 
+                .status(OrderStatus.valueOf(savedOrder.getStatus()))
+                .totalPrice(savedOrder.getTotalPrice().longValue())
+                .finalPrice(savedOrder.getFinalPrice())
+                .shippingAddress(savedOrder.getShippingAddress())
+                .phoneNumber(savedOrder.getPhoneNumber())
                 .message("Đơn hàng đã được tạo thành công")
                 .build();
     }
@@ -104,7 +107,7 @@ public class OrderService {
             try {
                 response.setStatus(OrderStatus.valueOf(order.getStatus().toUpperCase()));
             } catch (IllegalArgumentException e) {
-                response.setStatus(OrderStatus.PENDING); // Mặc định nếu không khớp
+                response.setStatus(OrderStatus.PENDING);
             }
         }
 
