@@ -1,12 +1,11 @@
 export const InventoryWarning = ({ items }) => {
-  // Kiểm tra xem có sản phẩm nào trong giỏ hàng vượt quá 11 không
-  const hasOutOfStock = items.some(item => item.quantity > 11);
+  const hasOutOfStock = items.some(item => item.quantity > item.stock);
 
   if (!hasOutOfStock) return null;
 
   return (
-    <div 
-      data-testid="inventory-error"
+    <div
+      data-testid="inventory-warning"
       style={{ 
         color: '#721c24', 
         backgroundColor: '#f8d7da', 
@@ -16,7 +15,7 @@ export const InventoryWarning = ({ items }) => {
         border: '1px solid #f5c6cb'
       }}
     >
-      Cảnh báo: Một số sản phẩm (tối đa 11 cái) đã vượt quá tồn kho!
+      Cảnh báo: Một số sản phẩm đã vượt quá tồn kho!
     </div>
   );
 };

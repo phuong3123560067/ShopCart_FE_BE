@@ -1,43 +1,32 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import CartComponent from "./components/CartComponent";
 import CheckoutPage from "./components/CheckoutPage";
+import SuccessPage from "./components/SuccessPage";
+import Login from "./components/auth/Login";
+import Register from "./components/auth/Register";
+
 import "./App.css";
 
 function App() {
-  const SuccessPage = () => {
-    const location = useLocation();
-    const orderId = location.state?.orderId; // Lấy mã đơn hàng từ state
-
-    return (
-      <div style={{ textAlign: 'center', padding: '40px', border: '2px solid #28a745', borderRadius: '10px' }}>
-        <h2 style={{ color: 'green' }}> ĐẶT HÀNG THÀNH CÔNG!</h2>
-        
-        {/* Hiện mã cho người dùng thấy */}
-        <div style={{ backgroundColor: '#f4f4f4', padding: '10px', display: 'inline-block', borderRadius: '5px' }}>
-          Mã đơn hàng của bạn: <strong>{orderId || "Đang xử lý..."}</strong>
-        </div>
-
-        <div style={{ marginTop: '20px' }}>
-          <button onClick={() => window.location.href = '/'}>Tiếp tục mua sắm</button>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <Router>
       <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-        <h1>Hệ thống Bán hàng ShopCart</h1>
-        <hr />
+        <h1 style={{ textAlign: 'center', color: '#2d3748' }}>🛒 Hệ Thống Mua Sắm Online</h1>
+        <hr style={{ border: '0.5px solid #e2e8f0', margin: '20px 0' }} />
         
         <Routes>
-          {/* Trang giỏ hàng là mặc định */}
-          <Route path="/" element={<CartComponent userId="user01" />} />
+          {/* 1. Trang Login làm trang chủ mặc định để người dùng đăng nhập trước */}
+          <Route path="/" element={<Login />} />
+
+          <Route path="/register" element={<Register />} />
           
-          {/* Trang thanh toán riêng biệt */}
+          {/* 2. Trang giỏ hàng - sử dụng user_id động từ login (tạm thời để user01) */}
+          <Route path="/cart" element={<CartComponent />} />
+          
+          {/* 3. Trang thanh toán */}
           <Route path="/checkout" element={<CheckoutPage />} />
           
-          {/* Trang xác nhận sau khi xong (Câu 6.2.2) */}
+          {/* 4. Trang xác nhận sau khi xong */}
           <Route path="/order-confirmation" element={<SuccessPage />} />
         </Routes>
       </div>

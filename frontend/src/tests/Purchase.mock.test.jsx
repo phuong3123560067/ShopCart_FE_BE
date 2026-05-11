@@ -1,8 +1,9 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import CartComponent from '../components/CartComponent'; // Giả sử nút thanh toán nằm ở đây
+import CartComponent from '../components/CartComponent';
 import * as orderService from '../services/orderService';
 import * as inventoryService from '../services/inventoryService';
+import { PRODUCT_AVAILABLE, PRODUCT_OUT_OF_STOCK } from './mockData/cart.mock';
 
 // a) Mock các external dependencies
 vi.mock('../services/orderService');
@@ -15,51 +16,53 @@ describe('Purchase Mock Tests', () => {
 
     // b) Scenario: Đặt hàng THÀNH CÔNG
     test('Mock: Đặt hàng thành công khi còn hàng', async () => {
-        // Mock inventory: Còn hàng
         vi.mocked(inventoryService.checkStock).mockResolvedValue({ available: true });
 
-        // Mock order: Tạo đơn thành công
         vi.mocked(orderService.createOrder).mockResolvedValue({
-            orderId: 'ORD-001',
-            status: 'PENDING',
-            totalPrice: 30550000
+            order_id: 'ORD-001',
+            status: 'PENDING'
         });
 
-        // Giả lập giao diện (Ví dụ gọi hàm thanh toán)
-        // Ở đây mình minh họa bằng cách gọi trực tiếp logic để verify mock calls
-        const items = [{ productId: 'P001', quantity: 2 }];
+        const items = [{ 
+            product_id: PRODUCT_AVAILABLE.product_id, // 'P999'
+            quantity: 1 
+        }];
         
-        // Giả sử trong Component bạn gọi thế này:
         const stockStatus = await inventoryService.checkStock(items);
         if (stockStatus.available) {
-            await orderService.createOrder({ items, userId: 'user01' });
+            await orderService.createOrder({ items, user_id: 'user01' });
         }
 
-        // Verify mock calls (Yêu cầu câu b)
+        // Verify: Kiểm tra xem đã gọi đúng mã sản phẩm 999 chưa
         expect(inventoryService.checkStock).toHaveBeenCalledWith(
             expect.arrayContaining([
-                expect.objectContaining({ productId: 'P001' })
+                expect.objectContaining({ product_id: PRODUCT_AVAILABLE.product_id })
             ])
         );
         expect(orderService.createOrder).toHaveBeenCalledTimes(1);
     });
 
     // b) Scenario: Đặt hàng THẤT BẠI (Do hết hàng)
-    test('Mock: Đặt hàng thất bạn khi hết hàng', async () => {
-        // Mock inventory: HẾT HÀNG
+    test('Mock: Đặt hàng thất bại khi hết hàng', async () => {
         vi.mocked(inventoryService.checkStock).mockResolvedValue({ available: false });
 
-        const items = [{ productId: 'P001', quantity: 2 }];
+        const items = [{ 
+            product_id: PRODUCT_OUT_OF_STOCK.product_id, // '0'
+            quantity: 1 
+        }];
         
         const stockStatus = await inventoryService.checkStock(items);
         
-        // Logic: Nếu không còn hàng thì KHÔNG ĐƯỢC gọi createOrder
         if (stockStatus.available) {
-            await orderService.createOrder({ items, userId: 'user01' });
+            await orderService.createOrder({ items, user_id: 'user01' });
         }
 
-        // Verify: createOrder không bao giờ được gọi
+        // Verify: Đảm bảo đã check sản phẩm P000 và KHÔNG tạo đơn hàng
+        expect(inventoryService.checkStock).toHaveBeenCalledWith(
+            expect.arrayContaining([
+                expect.objectContaining({ product_id: PRODUCT_OUT_OF_STOCK.product_id })
+            ])
+        );
         expect(orderService.createOrder).not.toHaveBeenCalled();
-        expect(inventoryService.checkStock).toHaveBeenCalled();
     });
 });

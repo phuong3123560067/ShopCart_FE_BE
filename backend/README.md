@@ -138,11 +138,11 @@ mvn jacoco:report (Kiểm tra xem đã đạt 85% coverage chưa)
 
 | Method | API Endpoint | Chức năng |
 | :--- | :--- | :--- |
-| **GET** | `/api/inventory/{productId}` | Kiểm tra số lượng tồn kho còn lại   |
-|**PUT** | `/api/inventory/{productId}` | Cập nhật số lượng kho(Tạo điều kiện: Chỉnh kho về 0 để test case: "khi hết hàng" )  |
+| **GET** | `/api/inventory/{product_id}` | Kiểm tra số lượng tồn kho còn lại   |
+|**PUT** | `/api/inventory/{product_id}` | Cập nhật số lượng kho(Tạo điều kiện: Chỉnh kho về 0 để test case: "khi hết hàng" )  |
 - **6.1. Luồng dữ liệu chuẩn (Flow)**
 - Lưu ý kỹ thứ tự nhận dữ liệu này để không viết sai file:
-- Request: Postman gửi JSON {"productId": 1, "quantity": 2}.
+- Request: Postman gửi JSON {"product_id": 1, "quantity": 2}.
 - DTO: CartRequestDTO nhận đống JSON đó ở tầng Controller.
 - Service: Controller chuyển DTO này sang Service.
 - Mapper: Service dùng Mapper đổi DTO thành Entity CartItem.
