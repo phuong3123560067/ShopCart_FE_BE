@@ -109,4 +109,17 @@ class AuthControllerIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("Token invalid"));
     }
+    @Test
+    @DisplayName("Logic: Đăng ký thất bại (400) - Phủ khối catch register")
+    void testRegister_CatchBlock() throws Exception {
+        when(authService.registerUser(any())).thenThrow(new RuntimeException("Email này đã được đăng ký!"));
+
+        RegisterRequest request = new RegisterRequest("existed@gmail.com", "123456", "User");
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Email này đã được đăng ký!"));
+    }
 }
