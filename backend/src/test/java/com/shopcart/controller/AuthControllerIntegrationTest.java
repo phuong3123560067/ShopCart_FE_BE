@@ -52,7 +52,7 @@ class AuthControllerIntegrationTest {
     @DisplayName("Security: Đăng nhập thành công (Cho phép truy cập công khai)")
     void testLogin_Success() throws Exception {
         LoginRequest request = new LoginRequest("user@gmail.com", "user123");
-        AuthResponse response = new AuthResponse("mock-token", "user@gmail.com", "CUSTOMER");
+        AuthResponse response = new AuthResponse("mock-token", "user@gmail.com", "CUSTOMER", 1);
 
         when(authService.authenticateUser(any())).thenReturn(response);
 
@@ -73,7 +73,7 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    @WithMockUser // Giả lập đã đăng nhập (Bất kỳ user nào)
+    @WithMockUser
     @DisplayName("Security: Đăng xuất thành công khi đã xác thực (200)")
     void testLogout_WithToken_Success() throws Exception {
         when(authService.logout(any())).thenReturn("Đăng xuất thành công!");

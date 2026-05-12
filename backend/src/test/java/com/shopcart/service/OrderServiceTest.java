@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -49,41 +50,51 @@ public class OrderServiceTest {
     private OrderService orderService;
 
     @Test
+    @DisplayName("Tạo đơn hàng thành công ")
     void testCreateOrderSuccess() {
-        // 1. Setup Request: Dùng Integer 123 thay vì String "user123"
+
         OrderRequest request = new OrderRequest();
-        request.setUserId(123); 
-        
-        // 2. Giả lập Giỏ hàng và Items
+        request.setUserId(123);
+        request.setShippingAddress("97 Võ Văn Tần");
+        request.setPhoneNumber("0901234567");
+
+
         Cart mockCart = new Cart();
         mockCart.setId(100);
         when(cartRepository.findByUserId(123)).thenReturn(Optional.of(mockCart));
 
+
         CartItem item = new CartItem();
-        item.setProductId(1); // Dùng Integer 1 thay vì 1L
+        item.setProductId(1);
         item.setQuantity(2);
-        when(cartItemRepository.findByCartId(100)).thenReturn(List.of(item)); 
-        
+        when(cartItemRepository.findByCartId(100)).thenReturn(List.of(item));
+
         Product product = new Product();
-        product.setStock(10); // Sửa từ setInventoryQuantity thành setStock
+        product.setId(1);
+        product.setStock(10);
         product.setPrice(BigDecimal.valueOf(50.0));
         when(productRepository.findById(1)).thenReturn(Optional.of(product));
 
-        Order savedOrder = new Order();
-        savedOrder.setId(1); 
-        savedOrder.setStatus("PENDING"); // Sửa từ Enum sang String nếu Entity dùng String
-        when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
 
-        // 3. Thực thi
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
+            Order orderToSave = invocation.getArgument(0);
+            orderToSave.setId(1);
+
+            return orderToSave;
+        });
+
+
         OrderResponse response = orderService.createOrder(request);
 
-        // 4. Assert
+
         assertNotNull(response);
         assertEquals("1", response.getOrderId());
         assertEquals(OrderStatus.PENDING, response.getStatus());
-        
-        // Verify xóa giỏ hàng (Cần đúng kiểu Integer)
+        assertEquals("Đơn hàng đã được tạo thành công", response.getMessage());
+
+
         verify(cartRepository).deleteByUserId(123);
+        verify(productRepository).save(any(Product.class));
     }
 
     @Test
@@ -152,7 +163,7 @@ public class OrderServiceTest {
         // GIVEN
         Order order = new Order();
         order.setId(1);
-        order.setStatus("STATUS_KHONG_TON_TAI"); // Gây lỗi IllegalArgumentException trong try-catch
+        order.setStatus("STATUS_KHONG_TON_TAI");
         order.setTotalPrice(new BigDecimal("100000"));
         when(orderRepository.findById(1)).thenReturn(Optional.of(order));
 
@@ -160,7 +171,52 @@ public class OrderServiceTest {
         OrderResponse response = orderService.getOrderById(1);
         
         // THEN
-        assertEquals(OrderStatus.PENDING, response.getStatus()); // Kiểm tra xem catch có hoạt động không
+        assertEquals(OrderStatus.PENDING, response.getStatus());
         assertEquals("1", response.getOrderId());
+    }
+    @Test
+    @DisplayName("5.2.2 - Mocking: Verify interactions và Capture dữ liệu tồn kho")
+    void testCreateOrder_VerifyAndCapture() {
+        // GIVEN
+        Integer userId = 123;
+        OrderRequest request = new OrderRequest();
+        request.setUserId(userId);
+        request.setShippingAddress("97 Võ Văn Tần");
+        request.setPhoneNumber("0901234567");
+
+        Cart mockCart = new Cart();
+        mockCart.setId(100);
+        when(cartRepository.findByUserId(userId)).thenReturn(Optional.of(mockCart));
+
+        CartItem item = new CartItem();
+        item.setProductId(200);
+        item.setQuantity(3);
+        when(cartItemRepository.findByCartId(100)).thenReturn(List.of(item));
+
+        Product mockProduct = new Product();
+        mockProduct.setId(200);
+        mockProduct.setStock(10); // Tồn kho ban đầu là 10
+        mockProduct.setPrice(BigDecimal.valueOf(1000));
+        when(productRepository.findById(200)).thenReturn(Optional.of(mockProduct));
+
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
+            Order order = invocation.getArgument(0);
+            order.setId(1);
+            return order;
+        });
+
+        // WHEN:
+        orderService.createOrder(request);
+
+        // THEN:
+
+        verify(orderRepository).save(any(Order.class));
+
+
+        ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
+        verify(productRepository).save(productCaptor.capture());
+
+        Product savedProduct = productCaptor.getValue();
+        assertEquals(7, savedProduct.getStock(), "Số lượng tồn kho trong database phải được cập nhật thành 7");
     }
 }

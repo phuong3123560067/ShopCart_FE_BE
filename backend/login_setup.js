@@ -1,24 +1,33 @@
 import http from 'k6/http';
 
+export const options = {
+    vus: 1,
+    iterations: 1,
+};
+
 export default function () {
-  let tokens = [];
+    let allTokens = [];
 
-  // 1. Chỉ login 1 user duy nhất có sẵn (ví dụ user@gmail.com)
-  let res = http.post('http://localhost:3000/api/auth/login', JSON.stringify({
-    email: 'user@gmail.com', // User này phải có sẵn trong data.sql
-    password: 'user123'
-  }), { headers: { 'Content-Type': 'application/json' } });
+    console.log("Đang khởi tạo đăng nhập cho 50 users...");
 
-  if (res.status === 200) {
-    const token = res.json().token || res.json().jwt || res.json().accessToken;
+    for (let i = 1; i <= 50; i++) {
+        const res = http.post('http://localhost:3000/api/auth/login', JSON.stringify({
+            email: `user${i}@gmail.com`,
+            password: 'user123'
+        }), {
+            headers: { 'Content-Type': 'application/json' },
+            tags: { name: 'LoginCall' }
+        });
 
-    // 2. Nhân bản token đó thành 50 cái để đánh lừa k6
-    for (let i = 0; i < 50; i++) {
-      tokens.push(token);
+        if (res.status === 200) {
+            const token = res.json().token || res.json().jwt || res.json().accessToken;
+            allTokens.push(token);
+        }
     }
-    console.log("--- COPY MẢNG TOKEN DƯỚI ĐÂY ---");
-    console.log(JSON.stringify(tokens));
-  } else {
-    console.log("Login thất bại! Hãy chắc chắn user@gmail.com tồn tại.");
-  }
+
+    console.log("\n================ DANH SÁCH TOKEN GỘP (COPY TỪ DẤU [ ĐẾN ] ) ================");
+    console.log(JSON.stringify(allTokens));
+    console.log("============================================================================\n");
+
+    console.log(`Đã lấy thành công: ${allTokens.length}/50 tokens.`);
 }
