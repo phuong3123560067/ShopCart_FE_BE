@@ -53,23 +53,25 @@ function CartComponent({ user_id: propUser_id }) {
     };
 
     const handleUpdateQuantity = async (product_id, change) => {
-        // 1. Tìm item hiện tại trong giỏ hàng để biết số lượng đang có
-        const item = cart.items.find(i => i.product_id === product_id);
-        if (!item) return;
+        //Tìm sản phẩm giỏ hàng
+        const cartItem = cart?.items?.find(i => i.product_id === product_id);
+        if (!cartItem) return; // Nếu không tìm thấy sản phẩm trong giỏ, dừng lại
 
-        // 2. Tìm thông tin gốc từ PRODUCT_LIST để lấy 'stock' (hàng tồn kho)
-        const originalProduct = PRODUCT_LIST.find(p => p.product_id === product_id);
+        //Lấy kho hàng động
+        const currentInventory = inventoryService.getProducts();
+        const originalProduct = currentInventory.find(p => p.product_id === product_id);
         const maxStock = originalProduct ? originalProduct.stock : 0;
 
-        const newQty = item.quantity + change;
+        //Tính số lượng mới dựa trên cartItem vừa tìm được
+        const newQty = cartItem.quantity + change;
 
-        // 3. Nếu người dùng nhấn giảm xuống 0
+        // Nếu người dùng nhấn giảm xuống 0
         if (newQty < 0) return;
 
-        // 4. KIỂM TRA QUÁ TỒN KHO TẠI ĐÂY
+        //kiểm tra tồn kho
         if (newQty > maxStock) {
             // Nếu vượt quá stock, hiển thị thông báo lỗi ngay
-            setMessage(`Rất tiếc, sản phẩm ${item.name} chỉ còn ${maxStock} sản phẩm trong kho!`);
+            setMessage(`Rất tiếc, sản phẩm ${cartItem.name} chỉ còn ${maxStock} sản phẩm trong kho!`);
             return; // Dừng hàm, không gọi API update nữa
         }
 

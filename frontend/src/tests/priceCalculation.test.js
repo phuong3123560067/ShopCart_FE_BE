@@ -8,7 +8,7 @@ describe("Price Calculation Tests", () => {
         const shippingFee = SHIPPING.DEFAULT; // 30000
         const result = calculateOrderPrice(VALID_CART.items, null, shippingFee);
 
-        // VALID_CART subtotal = 21,000,000[cite: 12]
+        // VALID_CART subtotal = 21,000,000
         expect(result.subtotal).toBe(21000000); 
         expect(result.discount).toBe(0); 
         expect(result.shippingFee).toBe(30000); 

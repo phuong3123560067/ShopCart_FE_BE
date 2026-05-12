@@ -18,14 +18,24 @@ vi.mock('react-router-dom', async () => {
 
 describe('Cart Component Integration Tests', () => {
     
-    // GIẢI PHÁP QUAN TRỌNG: Thiết lập giá trị mặc định trước mỗi Test Case
+    // Thiết lập giá trị mặc định trước mỗi Test Case
     beforeEach(() => {
         vi.clearAllMocks();
-    
+        inventoryService.initializeInventory.mockImplementation(() => {});
+        
+        // Mock getProducts trả về dữ liệu rõ ràng
+        inventoryService.getProducts.mockReturnValue([
+            { product_id: 1, name: "Laptop Dell", stock: 15 },
+            { product_id: 998, name: "MacBook Pro", stock: 10 },
+            { product_id: 994, name: "Bàn phím cơ", stock: 0 },
+            { product_id: 999, name: "Test Product", stock: 5 },
+        ]);
+
         inventoryService.checkStock.mockResolvedValue({ available: true });
 
-        cartService.addToCart.mockResolvedValue({ success: true, message: 'Thành công' });
+        // Mock cartService
         cartService.getCart.mockResolvedValue(VALID_CART);
+        cartService.addToCart.mockResolvedValue({ success: true });
         cartService.updateQuantity.mockResolvedValue({ success: true });
     });
 
@@ -34,8 +44,8 @@ describe('Cart Component Integration Tests', () => {
     });
 
     test('TC1: Hiển thị giỏ hàng rỗng khi chưa có sản phẩm', async () => {
-        cartService.getCart.mockResolvedValue(EMPTY_CART); // Ghi đè mock cho TC này
-
+        cartService.getCart.mockResolvedValue(EMPTY_CART); // Ghi đè mock
+        
         render(<BrowserRouter><CartComponent user_id="user01" /></BrowserRouter>);
 
         await waitFor(() => {
@@ -60,6 +70,7 @@ describe('Cart Component Integration Tests', () => {
 
     test('TC3: Tăng số lượng sản phẩm', async () => {
         let currentCart = { ...VALID_CART };
+        
         cartService.getCart.mockImplementation(() => Promise.resolve(currentCart));
         
         cartService.updateQuantity.mockImplementation((user_id, product_id, newQty) => {
@@ -73,14 +84,14 @@ describe('Cart Component Integration Tests', () => {
         });
 
         render(<BrowserRouter><CartComponent user_id="user01" /></BrowserRouter>);
-        const laptopRow = await screen.findByTestId('cart-item-1'); 
         
+        const laptopRow = await screen.findByTestId('cart-item-1'); 
         const increaseBtn = within(laptopRow).getByTestId('increase-qty-1');
+        
         fireEvent.click(increaseBtn);
 
         const qtyValue = await screen.findByTestId('quantity-value-1');
         expect(qtyValue).toHaveTextContent('2');
-
     });
 
     test('TC4: Chuyển hướng sang trang Checkout khi dữ liệu hợp lệ', async () => {

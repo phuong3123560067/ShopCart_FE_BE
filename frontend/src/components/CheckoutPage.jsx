@@ -5,6 +5,7 @@ import * as cartService from "../services/cartService";
 import { CheckoutSummary } from "./CheckoutSummary";
 import { InventoryWarning } from "./InventoryWarning";
 import { COUPONS, SHIPPING } from "../tests/mockData/cart.mock";
+import * as inventoryService from "../services/inventoryService";
 
 const CheckoutPage = () => {
     const [discountCode, setDiscountCode] = useState(""); 
@@ -54,31 +55,45 @@ const CheckoutPage = () => {
 
     const handleFinalConfirm = async () => {
         try {
+            //tạo đơn hàng
             const response = await orderService.createOrder({
                 user_id: cart.user_id,
                 items: cart.items,
                 total_price: finalTotal
             });
             
-            if (response?.order_id || response?.orderData?.order_id) {
-                
-                localStorage.removeItem(`cart_${cart.user_id}`);
+            //kiểm tra response
+            const orderId = response?.order_id || response?.orderData?.order_id;
 
+            if (orderId) {
+                // trừ tồn kho
+                if (cart && cart.items) {
+                    try {
+                        await inventoryService.decreaseStockAfterPurchase(cart.items);
+                    } catch (stockErr) {
+                        console.error("Lỗi cập nhật tồn kho:", stockErr);
+                        // Vẫn tiếp tục vì đơn hàng đã tạo thành công
+                    }
+                }
+
+                // xóa giỏ hàng
                 try {
+                    localStorage.removeItem(`cart_${cart.user_id}`);
                     await cartService.clearCart(cart.user_id);
                 } catch (clearErr) {
                     console.error("Lỗi xóa giỏ hàng:", clearErr);
                 }
 
-                // Chuyển trang với ID đúng
+                // chuyển trang
                 navigate("/order-confirmation", { 
-                    state: { order_id: response.order_id || response.orderData.order_id } 
+                    state: { order_id: orderId } 
                 });
+
             } else {
-                // Hiển thị thông báo lỗi từ server/mock nếu có[cite: 21]
-                alert(response.message || "Không thể tạo đơn hàng!");
+                alert(response?.message || "Không thể tạo đơn hàng. Vui lòng thử lại!");
             }
         } catch (err) {
+            console.error("Lỗi xử lý đặt hàng:", err);
             alert("Có lỗi xảy ra khi xử lý đơn hàng!");
         }
     };

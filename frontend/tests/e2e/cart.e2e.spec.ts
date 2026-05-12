@@ -7,12 +7,12 @@ test.describe('ShopCart System - E2E Tests', () => {
     test.beforeEach(async ({ page }) => {
         cartPage = new CartPage(page);
         
-        // 1. Đi đến trang gốc (thường là Login)
+        // 1. Đi đến trang Login
         await page.goto('http://localhost:5173');
         // await page.goto('/');
         
         // 2. Thực hiện đăng nhập thông qua phương thức đã định nghĩa trong POM
-        // Sử dụng tài khoản test từ mock data của bạn
+        // Sử dụng tài khoản test từ mock data
         await cartPage.login('test@gmail.com', '123');
 
         // 3. Đảm bảo PRODUCT_LIST đã được tải xong sau khi đăng nhập

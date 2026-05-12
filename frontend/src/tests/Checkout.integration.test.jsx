@@ -1,23 +1,39 @@
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import CheckoutPage from '../components/CheckoutPage';
 import SuccessPage from '../components/SuccessPage';
 import * as orderService from '../services/orderService';
+import * as inventoryService from '../services/inventoryService';
 import { MemoryRouter } from 'react-router-dom';
-import { VALID_CART, OUT_OF_STOCK_CART, PRODUCT_OUT_OF_STOCK , PRODUCT_AVAILABLE} from './mockData/cart.mock';
+import { VALID_CART, OUT_OF_STOCK_CART } from './mockData/cart.mock';
 
 // Giả lập hàm điều hướng
 const mockNavigate = vi.fn();
+
 vi.mock('react-router-dom', async () => {
     const actual = await vi.importActual('react-router-dom');
     return { ...actual, useNavigate: () => mockNavigate };
 });
 
-// Giả lập service đặt hàng
+// Giả lập service
 vi.mock('../services/orderService');
+vi.mock('../services/inventoryService');
 
 describe('Checkout Integration Tests', () => {
-    // Hàm render chuẩn: Luôn bọc data vào key cartData
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        
+        // Mock các hàm inventory
+        inventoryService.initializeInventory.mockImplementation(() => {});
+        inventoryService.decreaseStockAfterPurchase.mockResolvedValue({ success: true });
+    });
+
+    afterEach(() => {
+        vi.clearAllMocks();
+    });
+
+    // Hàm render
     const renderCheckout = (data) => {
         return render(
             <MemoryRouter initialEntries={[{ pathname: '/checkout', state: { cartData: data } }]}>
@@ -70,15 +86,18 @@ describe('Checkout Integration Tests', () => {
     });
 
     test('TC5: Hoàn tất đặt hàng, hiển thị mã đơn và có thể nhấn Tiếp tục mua sắm', async () => {
-        // 1. Mock API trả về mã đơn hàng ORD-123
+        // Mock API trả về mã đơn hàng ORD-123
         const mockOrder_id = 'ORD-123';
         vi.mocked(orderService.createOrder).mockResolvedValue({ 
             order_id: mockOrder_id 
         });
-        
+
+        // Mock trừ tồn kho
+        const decreaseStockSpy = vi.spyOn(inventoryService, 'decreaseStockAfterPurchase');
+
         renderCheckout(VALID_CART);
         
-        // 2. Nhấn nút "Xác nhận đặt hàng ngay"
+        // Nhấn nút "Xác nhận đặt hàng ngay"
         const confirmBtn = screen.getByTestId('confirm-checkout');
         fireEvent.click(confirmBtn);
 
@@ -91,6 +110,9 @@ describe('Checkout Integration Tests', () => {
                 })
             );
         });
+
+        // Kiểm tra có gọi trừ tồn kho không
+        expect(decreaseStockSpy).toHaveBeenCalledWith(VALID_CART.items);
 
         // 4. Test nút "Tiếp tục mua sắm"
         render(
