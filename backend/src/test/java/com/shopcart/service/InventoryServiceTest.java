@@ -83,12 +83,37 @@ class InventoryServiceTest {
     }
 
     @Test
-    @DisplayName("Cập nhật kho: Thất bại - Số lượng âm (Phủ vạch đỏ logic)")
+    @DisplayName("Cập nhật kho: Thất bại - Số lượng âm")
     void updateStock_NegativeError() {
         Product product = new Product();
         when(productRepository.findById(1)).thenReturn(Optional.of(product));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> inventoryService.updateStock(1, -5));
         assertEquals("Số lượng kho không được là số âm!", ex.getMessage());
+    }
+    @Test
+    @DisplayName("Lấy tồn kho: Thất bại - Sản phẩm không tồn tại ")
+    void getStock_ProductNotFound() {
+        when(productRepository.findById(999)).thenReturn(Optional.empty());
+
+        assertThrows(NoSuchElementException.class, () -> {
+            inventoryService.getStock(999);
+        });
+    }
+
+    @Test
+    @DisplayName("Cập nhật kho: Biên - Cập nhật đúng bằng 0 để set Inactive ")
+    void updateStock_ToZero_StatusInactive() {
+        Product product = new Product();
+        product.setId(1);
+        product.setStock(10);
+        product.setStatus("Active");
+
+        when(productRepository.findById(1)).thenReturn(Optional.of(product));
+
+        InventoryResponse response = inventoryService.updateStock(1, 0);
+
+        assertEquals(0, response.getStock());
+        assertEquals("Inactive", product.getStatus());
     }
 }

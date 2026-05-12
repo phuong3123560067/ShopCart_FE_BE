@@ -69,4 +69,72 @@ class InventoryControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isBadRequest());
     }
+
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("Branch Coverage: Request body thiếu trường stock (Phủ vạch vàng if null)")
+    void updateStock_MissingStockField() throws Exception {
+
+        Map<String, Object> invalidBody = new HashMap<>();
+        invalidBody.put("other_field", 123);
+
+        mockMvc.perform(put("/api/inventory/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidBody)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void updateStock_Success() throws Exception {
+        Map<String, Integer> body = new HashMap<>();
+        body.put("stock", 50);
+
+        InventoryResponse res = InventoryResponse.builder().stock(50).build();
+        when(inventoryService.updateStock(anyInt(), anyInt())).thenReturn(res);
+
+        mockMvc.perform(put("/api/inventory/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isOk());
+    }
+
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("Branch Coverage: Gửi JSON không có key stock để ép null")
+    void updateStock_NullBranch() throws Exception {
+        // Gửi nội dung rỗng để requestBody.get("stock") trả về null
+        mockMvc.perform(put("/api/inventory/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+    }
+
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("Instruction Coverage: Ép ném RuntimeException để phủ ExceptionHandler")
+    void updateStock_HandleException() throws Exception {
+
+        when(inventoryService.updateStock(anyInt(), anyInt()))
+                .thenThrow(new RuntimeException("Lỗi ép phủ vạch đỏ"));
+
+        mockMvc.perform(put("/api/inventory/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"stock\": 10}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Lỗi ép phủ vạch đỏ"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void getStock_Ok() throws Exception {
+        InventoryResponse res = InventoryResponse.builder().stock(10).build();
+        when(inventoryService.getStock(1)).thenReturn(res);
+
+        mockMvc.perform(get("/api/inventory/1"))
+                .andExpect(status().isOk());
+    }
 }
