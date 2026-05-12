@@ -15,6 +15,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 
@@ -83,4 +85,24 @@ class OrderControllerIntegrationTest {
                         .content("{}"))
                 .andExpect(status().isUnauthorized());
     }
+
+        @Test
+        @WithMockUser(username = "user@gmail.com", roles = {"CUSTOMER"}) // Giả lập user đã đăng nhập
+        void getOrderById_NotFound() throws Exception {
+        when(orderService.getOrderById(999)).thenReturn(null);
+
+        mockMvc.perform(get("/api/orders/999"))
+                .andExpect(status().isNotFound()); // Kỳ vọng 404 thay vì bị chặn 401
+        }
+
+        @Test
+        @WithMockUser(username = "user@gmail.com", roles = {"CUSTOMER"})
+        void getOrderById_Success() throws Exception {
+        OrderResponse mockResponse = new OrderResponse();
+        // set các giá trị cần thiết...
+        when(orderService.getOrderById(1)).thenReturn(mockResponse);
+
+        mockMvc.perform(get("/api/orders/1"))
+                .andExpect(status().isOk()); // Kỳ vọng 200 thay vì bị chặn 401
+        }
 }

@@ -27,10 +27,13 @@ public class OrderController {
         // Trả về 201 Created như trong code Test yêu cầu
         return new ResponseEntity<>(response, HttpStatus.CREATED); 
     }
+
     @GetMapping("/{id}")
     public ResponseEntity<OrderResponse> getOrderById(@PathVariable Integer id) {
-        // Giả sử bạn đã có hàm chuyển đổi trong OrderResponse hoặc dùng MapStruct/ModelMapper
         OrderResponse response = orderService.getOrderById(id); 
+        if (response == null) {
+            return ResponseEntity.notFound().build(); 
+        }
         return ResponseEntity.ok(response);
     }
 }
