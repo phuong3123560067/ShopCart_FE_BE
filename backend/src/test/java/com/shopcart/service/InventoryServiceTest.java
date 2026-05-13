@@ -68,18 +68,18 @@ class InventoryServiceTest {
     }
 
     @Test
-    @DisplayName("Cập nhật kho: Thành công và tự động Inactive khi stock = 0")
-    void updateStock_Success_Inactive() {
+    @DisplayName("Cập nhật kho: Trạng thái phải chuyển sang Inactive khi số lượng tồn kho cập nhật về 0")
+    void shouldSetStatusInactiveWhenStockReachesZero() {
         Product product = new Product();
         product.setId(1);
-        product.setStock(5);
+        product.setStock(10);
 
         when(productRepository.findById(1)).thenReturn(Optional.of(product));
 
         InventoryResponse response = inventoryService.updateStock(1, 0);
 
-        assertEquals(0, response.getStock());
-        assertEquals("Inactive", product.getStatus());
+        assertEquals(0, response.getStock(), "Số lượng tồn kho trong response phải bằng 0");
+        assertEquals("Inactive", product.getStatus(), "Trạng thái sản phẩm phải là Inactive");
     }
 
     @Test
@@ -101,19 +101,5 @@ class InventoryServiceTest {
         });
     }
 
-    @Test
-    @DisplayName("Cập nhật kho: Biên - Cập nhật đúng bằng 0 để set Inactive ")
-    void updateStock_ToZero_StatusInactive() {
-        Product product = new Product();
-        product.setId(1);
-        product.setStock(10);
-        product.setStatus("Active");
 
-        when(productRepository.findById(1)).thenReturn(Optional.of(product));
-
-        InventoryResponse response = inventoryService.updateStock(1, 0);
-
-        assertEquals(0, response.getStock());
-        assertEquals("Inactive", product.getStatus());
-    }
 }
