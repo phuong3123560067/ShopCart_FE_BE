@@ -65,16 +65,15 @@ class AuthControllerIntegrationTest {
 
 
     @Test
-    @DisplayName("Security: Đăng xuất không thành công khi chưa đăng nhập (401)")
+    @DisplayName("Security: Đăng xuất không thành công khi chưa đăng nhập")
     void testLogout_WithoutToken_Unauthorized() throws Exception {
-        // Không gửi Header Authorization
         mockMvc.perform(post("/api/auth/logout"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     @WithMockUser
-    @DisplayName("Security: Đăng xuất thành công khi đã xác thực (200)")
+    @DisplayName("Security: Đăng xuất thành công khi đã xác thực")
     void testLogout_WithToken_Success() throws Exception {
         when(authService.logout(any())).thenReturn("Đăng xuất thành công!");
 
@@ -85,7 +84,7 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("Logic: Đăng nhập thất bại (401) - Phủ khối catch")
+    @DisplayName("Logic: Đăng nhập thất bại")
     void testLogin_Unauthorized_CatchBlock() throws Exception {
         when(authService.authenticateUser(any())).thenThrow(new RuntimeException("Mật khẩu sai"));
 
@@ -100,7 +99,7 @@ class AuthControllerIntegrationTest {
 
     @Test
     @WithMockUser
-    @DisplayName("Logic: Đăng xuất thất bại do Token lỗi - Phủ khối catch")
+    @DisplayName("Logic: Đăng xuất thất bại do Token lỗi")
     void testLogout_BadRequest_CatchBlock() throws Exception {
         when(authService.logout(any())).thenThrow(new RuntimeException("Token invalid"));
 
@@ -110,7 +109,7 @@ class AuthControllerIntegrationTest {
                 .andExpect(content().string("Token invalid"));
     }
     @Test
-    @DisplayName("Logic: Đăng ký thất bại (400) - Phủ khối catch register")
+    @DisplayName("Logic: Đăng ký thất bại")
     void testRegister_CatchBlock() throws Exception {
         when(authService.registerUser(any())).thenThrow(new RuntimeException("Email này đã được đăng ký!"));
 

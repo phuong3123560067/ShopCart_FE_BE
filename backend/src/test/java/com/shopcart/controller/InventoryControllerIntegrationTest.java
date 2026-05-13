@@ -48,7 +48,7 @@ class InventoryControllerIntegrationTest {
 
     @Test
     @WithMockUser(roles = "CUSTOMER")
-    @DisplayName("Security: Customer truy cập kho - Bị chặn (403)")
+    @DisplayName("Security: Customer truy cập kho - Bị chặn ")
     void getStock_AsCustomer_Forbidden() throws Exception {
         mockMvc.perform(get("/api/inventory/1"))
                 .andExpect(status().isForbidden());
@@ -56,7 +56,7 @@ class InventoryControllerIntegrationTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    @DisplayName("Logic: Admin cập nhật kho với số âm - 400 Bad Request")
+    @DisplayName("Logic: Admin cập nhật kho với số âm")
     void updateStock_ApiNegative() throws Exception {
         Map<String, Object> body = new HashMap<>();
         body.put("stock", -10);
@@ -73,7 +73,7 @@ class InventoryControllerIntegrationTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    @DisplayName("Branch Coverage: Request body thiếu trường stock (Phủ vạch vàng if null)")
+    @DisplayName("Branch Coverage: Request body sai trường")
     void updateStock_MissingStockField() throws Exception {
 
         Map<String, Object> invalidBody = new HashMap<>();
@@ -105,7 +105,6 @@ class InventoryControllerIntegrationTest {
     @WithMockUser(roles = "ADMIN")
     @DisplayName("Branch Coverage: Gửi JSON không có key stock để ép null")
     void updateStock_NullBranch() throws Exception {
-        // Gửi nội dung rỗng để requestBody.get("stock") trả về null
         mockMvc.perform(put("/api/inventory/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))

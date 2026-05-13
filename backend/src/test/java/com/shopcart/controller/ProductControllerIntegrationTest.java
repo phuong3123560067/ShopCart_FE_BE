@@ -68,7 +68,7 @@ public class ProductControllerIntegrationTest {
         mockMvc.perform(put("/api/products/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Hack\"}"))
-                .andExpect(status().isForbidden()); // Trả về 403 Forbidden
+                .andExpect(status().isForbidden());
     }
     @Test
     @DisplayName("Controller: Lấy tất cả sản phẩm - Thành công")
@@ -88,7 +88,7 @@ public class ProductControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("Controller: Cập nhật sản phẩm - Lỗi BadRequest (400)")
+    @DisplayName("Controller: Cập nhật sản phẩm")
     @WithMockUser(roles = "ADMIN")
     void testUpdateProduct_BadRequest() throws Exception {
         ProductUpdateRequest request = new ProductUpdateRequest();

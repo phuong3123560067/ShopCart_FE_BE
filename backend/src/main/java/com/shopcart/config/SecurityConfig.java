@@ -26,7 +26,6 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // CỰC KỲ QUAN TRỌNG: Cho phép cả FORWARD và INCLUDE đến đường dẫn lỗi
                         .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.FORWARD, jakarta.servlet.DispatcherType.ERROR).permitAll()
                         .requestMatchers("/error").permitAll()
 
@@ -57,7 +56,7 @@ public class SecurityConfig {
                             String errorStr = (errorAttr != null) ? errorAttr.toString() : "";
 
                             if (errorStr.contains("RuntimeException") || errorStr.contains("L?i")) {
-                                response.setStatus(HttpServletResponse.SC_BAD_REQUEST); // Ép về 400
+                                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                                 response.getWriter().write("{\"status\": 400, \"error\": \"Bad Request\", \"message\": \"Thao tác thất bại: Dữ liệu không hợp lệ hoặc không tìm thấy.\"}");
                             } else {
 
